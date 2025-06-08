@@ -36,6 +36,8 @@ interface GameState {
   currentResult: number | null;
   difficulty: Difficulty;
   boardSize: BoardSize;
+  showSolutions: boolean;
+  solutions: { cells: { row: number; col: number }[]; target: number; expression: string }[];
 }
 
 const DIFFICULTY_LABELS = {
@@ -64,6 +66,8 @@ export default function Game() {
     currentResult: null,
     difficulty: "easy",
     boardSize: 5,
+    showSolutions: false,
+    solutions: [],
   });
 
   const [showVictoryModal, setShowVictoryModal] = useState(false);
@@ -230,6 +234,94 @@ export default function Game() {
     }
   };
 
+  const findAllSolutions = useCallback((board: Cell[][], targets: number[], boardSize: BoardSize) => {
+    const solutions: { cells: { row: number; col: number }[]; target: number; expression: string }[] = [];
+    
+    // Check all possible paths on the board
+    for (let startRow = 0; startRow < boardSize; startRow++) {
+      for (let startCol = 0; startCol < boardSize; startCol++) {
+        if (board[startRow][startCol].type === "number") {
+          // Try paths in all 8 directions
+          const directions = [
+            [0, 1], [1, 0], [0, -1], [-1, 0], // horizontal/vertical
+            [1, 1], [1, -1], [-1, 1], [-1, -1] // diagonal
+          ];
+          
+          for (const [dRow, dCol] of directions) {
+            for (let length = 3; length <= Math.min(boardSize, 7); length += 2) {
+              const cells: { row: number; col: number }[] = [];
+              const expression: (number | Operation)[] = [];
+              let valid = true;
+              
+              for (let i = 0; i < length; i++) {
+                const row = startRow + i * dRow;
+                const col = startCol + i * dCol;
+                
+                if (row < 0 || row >= boardSize || col < 0 || col >= boardSize) {
+                  valid = false;
+                  break;
+                }
+                
+                const cell = board[row][col];
+                const expectedType = i % 2 === 0 ? "number" : "operation";
+                
+                if (cell.type !== expectedType) {
+                  valid = false;
+                  break;
+                }
+                
+                cells.push({ row, col });
+                expression.push(cell.value as number | Operation);
+              }
+              
+              if (valid && expression.length >= 3) {
+                const result = evaluateExpression(expression);
+                if (result !== null && targets.includes(result)) {
+                  // Format expression for display
+                  let expressionString = "";
+                  if (expression.length === 3) {
+                    expressionString = expression.join(" ");
+                  } else {
+                    let formatted = `${expression[0]}`;
+                    for (let i = 1; i < expression.length - 1; i += 2) {
+                      const operation = expression[i];
+                      const operand = expression[i + 1];
+                      if (i === 1) {
+                        formatted = `(${formatted} ${operation} ${operand})`;
+                      } else {
+                        formatted = `(${formatted} ${operation} ${operand})`;
+                      }
+                    }
+                    expressionString = formatted;
+                  }
+                  
+                  solutions.push({
+                    cells,
+                    target: result,
+                    expression: expressionString
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return solutions;
+  }, [evaluateExpression]);
+
+  // Handle give up
+  const handleGiveUp = () => {
+    const solutions = findAllSolutions(gameState.board, gameState.targets, gameState.boardSize);
+    setGameState(prev => ({
+      ...prev,
+      isPlaying: false,
+      showSolutions: true,
+      solutions
+    }));
+  };
+
   // Initialize new game
   const initializeGame = useCallback((difficulty?: Difficulty, boardSize?: BoardSize) => {
     const newDifficulty = difficulty || gameState.difficulty;
@@ -249,6 +341,8 @@ export default function Game() {
       currentResult: null,
       difficulty: newDifficulty,
       boardSize: newBoardSize,
+      showSolutions: false,
+      solutions: [],
     });
     setShowVictoryModal(false);
     setShowLeaderboard(false);

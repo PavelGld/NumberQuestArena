@@ -73,6 +73,8 @@ export const translations = {
     'settings.startGame': 'Начать игру',
     'toast.found': 'Отлично!',
     'toast.foundNumber': 'Вы нашли число',
+    'game.currentSelection': 'Текущий выбор:',
+    'game.selectPath': 'Выберите путь на поле',
   },
   en: {
     'game.title': 'Arithmetic Relay',
@@ -128,5 +130,7 @@ export const translations = {
     'settings.startGame': 'Start Game',
     'toast.found': 'Excellent!',
     'toast.foundNumber': 'You found number',
+    'game.currentSelection': 'Current selection:',
+    'game.selectPath': 'Select a path on the field',
   }
 };

@@ -725,9 +725,9 @@ export default function Game() {
                 <div className="mt-6 bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">Текущий выбор:</h3>
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">{t('game.currentSelection')}</h3>
                       <div className="text-lg font-mono text-gray-900 bg-white px-3 py-2 rounded border">
-                        {gameState.currentExpression || "Выберите путь на поле"}
+                        {gameState.currentExpression || t('game.selectPath')}
                         {gameState.currentResult !== null && (
                           <span className="font-bold text-indigo-600 ml-2">
                             = {gameState.currentResult}

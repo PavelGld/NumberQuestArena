@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle } from "lucide-react";
+import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings } from "lucide-react";
 import type { LeaderboardEntry, InsertLeaderboardEntry } from "@shared/schema";
 
 type CellType = "number" | "operation";
@@ -37,6 +38,18 @@ interface GameState {
   boardSize: BoardSize;
 }
 
+const DIFFICULTY_LABELS = {
+  easy: "Легко",
+  medium: "Средне", 
+  hard: "Сложно"
+};
+
+const BOARD_SIZE_LABELS = {
+  5: "5×5",
+  10: "10×10",
+  15: "15×15"
+};
+
 export default function Game() {
   const { toast } = useToast();
   const [gameState, setGameState] = useState<GameState>({
@@ -59,6 +72,8 @@ export default function Game() {
   const [playerNickname, setPlayerNickname] = useState("");
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
+  const [tempDifficulty, setTempDifficulty] = useState<Difficulty>(gameState.difficulty);
+  const [tempBoardSize, setTempBoardSize] = useState<BoardSize>(gameState.boardSize);
 
   // Fetch leaderboard
   const { data: leaderboard = [] } = useQuery<LeaderboardEntry[]>({
@@ -87,26 +102,25 @@ export default function Game() {
     },
   });
 
+  // Generate operations based on difficulty
+  const getOperationsForDifficulty = (difficulty: Difficulty): Operation[] => {
+    switch (difficulty) {
+      case "easy":
+        return ["+", "-", "*"];
+      case "medium":
+        return ["+", "-", "*", "/"];
+      case "hard":
+        return ["+", "-", "*", "/", "^"];
+      default:
+        return ["+", "-", "*"];
+    }
+  };
+
   // Generate random board
   const generateBoard = useCallback((boardSize: BoardSize, difficulty: Difficulty): Cell[][] => {
     const board: Cell[][] = [];
     const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    
-    // Get operations based on difficulty
-    const getOperations = (diff: Difficulty): Operation[] => {
-      switch (diff) {
-        case "easy":
-          return ["+", "-", "*"];
-        case "medium":
-          return ["+", "-", "*", "/"];
-        case "hard":
-          return ["+", "-", "*", "/", "^"];
-        default:
-          return ["+", "-", "*"];
-      }
-    };
-    
-    const operations = getOperations(difficulty);
+    const operations = getOperationsForDifficulty(difficulty);
 
     for (let row = 0; row < boardSize; row++) {
       board[row] = [];
@@ -203,7 +217,7 @@ export default function Game() {
             break;
         }
       }
-      return Math.round(result * 100) / 100; // Round to 2 decimal places
+      return Math.round(result * 100) / 100;
     } catch {
       return null;
     }
@@ -246,17 +260,15 @@ export default function Game() {
     return () => clearInterval(interval);
   }, [gameState.isPlaying]);
 
-  // Check if path is valid (continuous horizontal or vertical)
+  // Check if path is valid
   const isValidPath = (cells: { row: number; col: number }[]): boolean => {
     if (cells.length < 2) return true;
 
-    // Check if all cells are in the same row or column
     const allSameRow = cells.every(cell => cell.row === cells[0].row);
     const allSameCol = cells.every(cell => cell.col === cells[0].col);
 
     if (!allSameRow && !allSameCol) return false;
 
-    // Check if cells are continuous in the order they were selected
     if (allSameRow) {
       for (let i = 1; i < cells.length; i++) {
         if (Math.abs(cells[i].col - cells[i - 1].col) !== 1) return false;
@@ -287,35 +299,27 @@ export default function Game() {
 
     const newPath = [];
     
-    // Determine if we're selecting horizontally or vertically
     if (selectionStart.row === row) {
-      // Horizontal selection - maintain direction based on start and end
       if (selectionStart.col <= col) {
-        // Left to right
         for (let c = selectionStart.col; c <= col; c++) {
           newPath.push({ row, col: c });
         }
       } else {
-        // Right to left
         for (let c = selectionStart.col; c >= col; c--) {
           newPath.push({ row, col: c });
         }
       }
     } else if (selectionStart.col === col) {
-      // Vertical selection - maintain direction based on start and end
       if (selectionStart.row <= row) {
-        // Top to bottom
         for (let r = selectionStart.row; r <= row; r++) {
           newPath.push({ row: r, col });
         }
       } else {
-        // Bottom to top
         for (let r = selectionStart.row; r >= row; r--) {
           newPath.push({ row: r, col });
         }
       }
     } else {
-      // Invalid selection (diagonal), keep only start cell
       newPath.push(selectionStart);
     }
 
@@ -325,7 +329,6 @@ export default function Game() {
   const updateSelection = (cells: { row: number; col: number }[]) => {
     if (!isValidPath(cells) && cells.length > 1) return;
 
-    // Check if path starts with number and alternates correctly
     if (cells.length > 0) {
       const startCell = gameState.board[cells[0].row][cells[0].col];
       if (startCell.type !== "number") return;
@@ -387,7 +390,6 @@ export default function Game() {
       }
     }
 
-    // Clear selection
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
@@ -411,6 +413,11 @@ export default function Game() {
     }
   };
 
+  // Handle settings save
+  const handleSaveSettings = () => {
+    initializeGame(tempDifficulty, tempBoardSize);
+  };
+
   // Format time
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -421,7 +428,7 @@ export default function Game() {
   // Initialize game on mount
   useEffect(() => {
     initializeGame();
-  }, [initializeGame]);
+  }, []);
 
   const isCellSelected = (row: number, col: number) => {
     return gameState.selectedCells.some(cell => cell.row === row && cell.col === col);
@@ -429,16 +436,19 @@ export default function Game() {
 
   const getCellClasses = (cell: Cell, row: number, col: number) => {
     const isSelected = isCellSelected(row, col);
-    const baseClasses = "aspect-square border-2 rounded-lg flex items-center justify-center text-2xl font-bold transition-all cursor-pointer select-none";
+    const baseClasses = "aspect-square border-2 rounded-lg flex items-center justify-center font-bold transition-all cursor-pointer select-none";
+    
+    // Adjust text size based on board size
+    const textSize = gameState.boardSize === 5 ? "text-2xl" : gameState.boardSize === 10 ? "text-lg" : "text-sm";
     
     if (isSelected) {
-      return `${baseClasses} bg-indigo-500 border-indigo-600 text-white`;
+      return `${baseClasses} ${textSize} bg-indigo-500 border-indigo-600 text-white`;
     }
     
     if (cell.type === "number") {
-      return `${baseClasses} bg-white border-gray-200 text-gray-900 hover:border-indigo-300 hover:bg-indigo-50`;
+      return `${baseClasses} ${textSize} bg-white border-gray-200 text-gray-900 hover:border-indigo-300 hover:bg-indigo-50`;
     } else {
-      return `${baseClasses} bg-amber-100 border-amber-200 text-amber-800 hover:border-amber-400 hover:bg-amber-200`;
+      return `${baseClasses} ${textSize} bg-amber-100 border-amber-200 text-amber-800 hover:border-amber-400 hover:bg-amber-200`;
     }
   };
 
@@ -452,7 +462,12 @@ export default function Game() {
               <div className="bg-indigo-500 p-2 rounded-lg">
                 <Calculator className="text-white text-xl" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">Арифметическая эстафета</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Арифметическая эстафета</h1>
+                <div className="text-sm text-gray-600">
+                  {DIFFICULTY_LABELS[gameState.difficulty]} • {BOARD_SIZE_LABELS[gameState.boardSize]}
+                </div>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="bg-gray-100 px-4 py-2 rounded-lg">
@@ -460,7 +475,18 @@ export default function Game() {
                   {formatTime(gameState.gameTime)}
                 </span>
               </div>
-              <Button onClick={initializeGame} className="bg-indigo-500 hover:bg-indigo-600">
+              <Button 
+                onClick={() => setShowSettings(true)} 
+                variant="outline" 
+                className="border-gray-300"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Настройки
+              </Button>
+              <Button 
+                onClick={() => initializeGame()} 
+                className="bg-indigo-500 hover:bg-indigo-600"
+              >
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Новая игра
               </Button>
@@ -484,7 +510,10 @@ export default function Game() {
                 </div>
 
                 <div 
-                  className="grid grid-cols-5 gap-2 max-w-md mx-auto bg-gray-100 p-4 rounded-xl"
+                  className={`grid gap-1 mx-auto bg-gray-100 p-4 rounded-xl max-w-fit`}
+                  style={{
+                    gridTemplateColumns: `repeat(${gameState.boardSize}, minmax(0, 1fr))`
+                  }}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
                 >
@@ -493,6 +522,10 @@ export default function Game() {
                       <div
                         key={`${rowIndex}-${colIndex}`}
                         className={getCellClasses(cell, rowIndex, colIndex)}
+                        style={{
+                          width: gameState.boardSize === 5 ? "60px" : gameState.boardSize === 10 ? "40px" : "30px",
+                          height: gameState.boardSize === 5 ? "60px" : gameState.boardSize === 10 ? "40px" : "30px"
+                        }}
                         onMouseDown={() => handleCellMouseDown(rowIndex, colIndex)}
                         onMouseEnter={() => handleCellMouseEnter(rowIndex, colIndex)}
                       >
@@ -516,14 +549,6 @@ export default function Game() {
                         )}
                       </div>
                     </div>
-                    {gameState.currentResult !== null && (
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500 mb-1">Результат</div>
-                        <div className="text-3xl font-bold text-indigo-600">
-                          {gameState.currentResult}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </CardContent>
@@ -532,49 +557,37 @@ export default function Game() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Target Numbers */}
+            {/* Targets Panel */}
             <Card className="shadow-lg">
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Target className="text-indigo-500 mr-2" />
-                  Найдите числа:
-                </h3>
-
+                <div className="flex items-center space-x-2 mb-4">
+                  <Target className="text-indigo-500" />
+                  <h3 className="text-lg font-semibold text-gray-900">Найдите числа</h3>
+                </div>
                 <div className="space-y-3">
-                  {gameState.targets.map((target, index) => {
-                    const isFound = gameState.foundTargets.has(target);
-                    return (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-3 rounded-lg border-2 ${
-                          isFound
-                            ? "bg-emerald-50 border-emerald-200"
-                            : "bg-gray-50 border-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`text-xl font-bold ${
-                            isFound ? "text-emerald-800" : "text-gray-900"
-                          }`}
-                        >
-                          {target}
-                        </span>
-                        {isFound ? (
-                          <CheckCircle className="text-emerald-500" />
-                        ) : (
-                          <Circle className="text-gray-300" />
-                        )}
-                      </div>
-                    );
-                  })}
+                  {gameState.targets.map((target, index) => (
+                    <div 
+                      key={index} 
+                      className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+                        gameState.foundTargets.has(target)
+                          ? "bg-green-50 border-green-200 text-green-800"
+                          : "bg-gray-50 border-gray-200 text-gray-900"
+                      }`}
+                    >
+                      <span className="font-semibold text-lg">{target}</span>
+                      {gameState.foundTargets.has(target) ? (
+                        <CheckCircle className="text-green-600" size={20} />
+                      ) : (
+                        <Circle className="text-gray-400" size={20} />
+                      )}
+                    </div>
+                  ))}
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-600">Прогресс:</span>
-                    <span className="font-semibold text-gray-900">
-                      {gameState.foundTargets.size} из {gameState.targets.length}
-                    </span>
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Прогресс:</span>
+                    <span>{gameState.foundTargets.size}/{gameState.targets.length}</span>
                   </div>
                   <Progress 
                     value={(gameState.foundTargets.size / gameState.targets.length) * 100} 
@@ -584,176 +597,196 @@ export default function Game() {
               </CardContent>
             </Card>
 
-            {/* Game Stats */}
+            {/* Stats Panel */}
             <Card className="shadow-lg">
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <BarChart3 className="text-amber-500 mr-2" />
-                  Статистика
-                </h3>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Попыток:</span>
-                    <span className="font-semibold text-gray-900">{gameState.attemptCount}</span>
+                <div className="flex items-center space-x-2 mb-4">
+                  <BarChart3 className="text-indigo-500" />
+                  <h3 className="text-lg font-semibold text-gray-900">Статистика</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Время:</span>
+                    <span className="font-mono font-semibold">{formatTime(gameState.gameTime)}</span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Попытки:</span>
+                    <span className="font-semibold">{gameState.attemptCount}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-600">Найдено:</span>
-                    <span className="font-semibold text-emerald-600">{gameState.foundTargets.size}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Осталось:</span>
-                    <span className="font-semibold text-amber-600">
-                      {gameState.targets.length - gameState.foundTargets.size}
-                    </span>
+                    <span className="font-semibold">{gameState.foundTargets.size}/{gameState.targets.length}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Instructions */}
-            <Card className="bg-indigo-50 border-indigo-200">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-indigo-900 mb-3 flex items-center">
-                  <Info className="text-indigo-600 mr-2" />
-                  Как играть
-                </h3>
-
-                <div className="space-y-2 text-sm text-indigo-800">
-                  <p>• Выделяйте непрерывные линии (горизонтально или вертикально)</p>
-                  <p>• Начинайте с числа, затем операция, затем число</p>
-                  <p>• Найдите все целевые числа как можно быстрее</p>
-                  <p>• Операции выполняются слева направо</p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Leaderboard Button */}
+            <Button 
+              onClick={() => setShowLeaderboard(true)} 
+              className="w-full bg-amber-500 hover:bg-amber-600"
+            >
+              <Trophy className="mr-2 h-4 w-4" />
+              Лидерборд
+            </Button>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      {/* Settings Modal */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Настройки игры</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Сложность</label>
+              <Select value={tempDifficulty} onValueChange={(value: Difficulty) => setTempDifficulty(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="easy">Легко (+, -, *)</SelectItem>
+                  <SelectItem value="medium">Средне (+, -, *, /)</SelectItem>
+                  <SelectItem value="hard">Сложно (+, -, *, /, ^)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Размер поля</label>
+              <Select value={tempBoardSize.toString()} onValueChange={(value) => setTempBoardSize(parseInt(value) as BoardSize)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5×5 (4 цели)</SelectItem>
+                  <SelectItem value="10">10×10 (5 целей)</SelectItem>
+                  <SelectItem value="15">15×15 (7 целей)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
               <Button 
-                variant="ghost" 
-                onClick={() => setShowLeaderboard(true)}
-                className="text-indigo-500 hover:text-indigo-600"
+                onClick={() => setShowSettings(false)} 
+                variant="outline" 
+                className="flex-1"
               >
-                <Trophy className="mr-2 h-4 w-4" />
-                Лидерборд
+                Отмена
+              </Button>
+              <Button 
+                onClick={handleSaveSettings} 
+                className="flex-1 bg-indigo-500 hover:bg-indigo-600"
+              >
+                Начать игру
               </Button>
             </div>
-            <div className="text-gray-500 text-sm">
-              © 2024 Арифметическая эстафета
-            </div>
           </div>
-        </div>
-      </footer>
+        </DialogContent>
+      </Dialog>
 
       {/* Victory Modal */}
       <Dialog open={showVictoryModal} onOpenChange={setShowVictoryModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="text-center">
-              <Trophy className="mx-auto text-4xl text-yellow-500 mb-3" />
-              <DialogTitle className="text-2xl">Поздравляем!</DialogTitle>
-              <p className="text-gray-600 mt-2">Вы нашли все числа!</p>
-            </div>
+            <DialogTitle className="text-center text-2xl text-green-600">
+              🎉 Поздравляем!
+            </DialogTitle>
           </DialogHeader>
-
-          <div className="text-center mb-6">
-            <div className="text-3xl font-bold text-gray-900 mb-2">
-              <span className="font-mono">{formatTime(gameState.gameTime)}</span>
-            </div>
-            <p className="text-gray-600">Ваше время</p>
+          <div className="space-y-4 py-4 text-center">
+            <p className="text-gray-600">
+              Вы нашли все числа за <span className="font-bold">{formatTime(gameState.gameTime)}</span>!
+            </p>
+            <p className="text-sm text-gray-500">
+              Сложность: {DIFFICULTY_LABELS[gameState.difficulty]} • Поле: {BOARD_SIZE_LABELS[gameState.boardSize]}
+            </p>
+            
+            <form onSubmit={handleSubmitScore} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Введите ваш никнейм:</label>
+                <Input
+                  type="text"
+                  placeholder="Ваш никнейм"
+                  value={playerNickname}
+                  onChange={(e) => setPlayerNickname(e.target.value)}
+                  maxLength={20}
+                  required
+                />
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button 
+                  type="button" 
+                  onClick={() => setShowVictoryModal(false)} 
+                  variant="outline" 
+                  className="flex-1"
+                >
+                  Пропустить
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-green-500 hover:bg-green-600"
+                  disabled={submitScoreMutation.isPending}
+                >
+                  {submitScoreMutation.isPending ? "Сохранение..." : "Сохранить"}
+                </Button>
+              </div>
+            </form>
           </div>
-
-          <form onSubmit={handleSubmitScore} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Введите ваш никнейм:
-              </label>
-              <Input
-                value={playerNickname}
-                onChange={(e) => setPlayerNickname(e.target.value)}
-                placeholder="Ваш никнейм"
-                maxLength={20}
-                required
-              />
-            </div>
-
-            <div className="flex space-x-3">
-              <Button 
-                type="submit" 
-                className="flex-1"
-                disabled={submitScoreMutation.isPending}
-              >
-                Сохранить результат
-              </Button>
-              <Button 
-                type="button" 
-                variant="secondary"
-                className="flex-1"
-                onClick={initializeGame}
-              >
-                Новая игра
-              </Button>
-            </div>
-          </form>
         </DialogContent>
       </Dialog>
 
       {/* Leaderboard Modal */}
       <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center text-2xl">
-              <Trophy className="mr-3 text-yellow-500" />
-              Лидерборд
+            <DialogTitle className="flex items-center space-x-2">
+              <Trophy className="text-amber-500" />
+              <span>Лидерборд</span>
             </DialogTitle>
           </DialogHeader>
-
-          <div className="overflow-y-auto">
-            <div className="space-y-3">
-              {leaderboard.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  Пока никто не играл. Будьте первым!
-                </p>
-              ) : (
-                leaderboard.map((entry, index) => (
-                  <div
-                    key={entry.id}
-                    className={`flex items-center justify-between p-3 rounded-lg ${
-                      index === 0
-                        ? "bg-yellow-50 border border-yellow-200"
-                        : "bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          index === 0
-                            ? "bg-yellow-500 text-white"
-                            : "bg-gray-400 text-white"
-                        }`}
-                      >
-                        {index + 1}
-                      </div>
-                      <span className="font-semibold text-gray-900">
-                        {entry.nickname}
-                      </span>
-                    </div>
-                    <span
-                      className={`font-mono text-lg font-semibold ${
-                        index === 0 ? "text-yellow-700" : "text-gray-700"
+          <div className="space-y-4">
+            <div className="text-sm text-gray-600 text-center">
+              {DIFFICULTY_LABELS[gameState.difficulty]} • {BOARD_SIZE_LABELS[gameState.boardSize]}
+            </div>
+            
+            <div className="max-h-96 overflow-y-auto">
+              {leaderboard && leaderboard.length > 0 ? (
+                <div className="space-y-2">
+                  {leaderboard.map((entry: LeaderboardEntry, index: number) => (
+                    <div 
+                      key={entry.id} 
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        index === 0 ? "bg-amber-50 border border-amber-200" :
+                        index === 1 ? "bg-gray-50 border border-gray-200" :
+                        index === 2 ? "bg-orange-50 border border-orange-200" :
+                        "bg-white border border-gray-100"
                       }`}
                     >
-                      {formatTime(entry.time)}
-                    </span>
-                  </div>
-                ))
+                      <div className="flex items-center space-x-3">
+                        <span className={`font-bold text-lg ${
+                          index === 0 ? "text-amber-600" :
+                          index === 1 ? "text-gray-600" :
+                          index === 2 ? "text-orange-600" :
+                          "text-gray-400"
+                        }`}>
+                          #{index + 1}
+                        </span>
+                        <span className="font-medium">{entry.nickname}</span>
+                      </div>
+                      <span className="font-mono font-semibold">
+                        {formatTime(entry.time)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Trophy className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                  <p>Пока нет результатов для этой категории</p>
+                </div>
               )}
             </div>
           </div>

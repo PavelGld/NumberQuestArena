@@ -5,7 +5,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
-  getLeaderboard(): Promise<LeaderboardEntry[]>;
+  getLeaderboard(difficulty?: string, boardSize?: number): Promise<LeaderboardEntry[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -49,8 +49,18 @@ export class MemStorage implements IStorage {
     return entry;
   }
 
-  async getLeaderboard(): Promise<LeaderboardEntry[]> {
-    return Array.from(this.leaderboardEntries.values())
+  async getLeaderboard(difficulty?: string, boardSize?: number): Promise<LeaderboardEntry[]> {
+    let entries = Array.from(this.leaderboardEntries.values());
+    
+    // Filter by difficulty and board size if provided
+    if (difficulty) {
+      entries = entries.filter(entry => entry.difficulty === difficulty);
+    }
+    if (boardSize) {
+      entries = entries.filter(entry => entry.boardSize === boardSize);
+    }
+    
+    return entries
       .sort((a, b) => a.time - b.time) // Sort by time ascending (best times first)
       .slice(0, 10); // Top 10 entries
   }

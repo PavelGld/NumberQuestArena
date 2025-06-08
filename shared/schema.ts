@@ -12,6 +12,8 @@ export const leaderboardEntries = pgTable("leaderboard_entries", {
   id: serial("id").primaryKey(),
   nickname: text("nickname").notNull(),
   time: integer("time").notNull(), // time in seconds
+  difficulty: text("difficulty").notNull(), // "easy", "medium", "hard"
+  boardSize: integer("board_size").notNull(), // 5, 10, 15
   completedAt: timestamp("completed_at").defaultNow().notNull(),
 });
 
@@ -23,6 +25,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntries).pick({
   nickname: true,
   time: true,
+  difficulty: true,
+  boardSize: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

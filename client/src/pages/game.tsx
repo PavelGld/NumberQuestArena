@@ -12,7 +12,9 @@ import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Ci
 import type { LeaderboardEntry, InsertLeaderboardEntry } from "@shared/schema";
 
 type CellType = "number" | "operation";
-type Operation = "+" | "-" | "*" | "/";
+type Operation = "+" | "-" | "*" | "/" | "^";
+type Difficulty = "easy" | "medium" | "hard";
+type BoardSize = 5 | 10 | 15;
 
 interface Cell {
   value: number | Operation;
@@ -31,6 +33,8 @@ interface GameState {
   attemptCount: number;
   currentExpression: string;
   currentResult: number | null;
+  difficulty: Difficulty;
+  boardSize: BoardSize;
 }
 
 export default function Game() {
@@ -45,10 +49,13 @@ export default function Game() {
     attemptCount: 0,
     currentExpression: "",
     currentResult: null,
+    difficulty: "easy",
+    boardSize: 5,
   });
 
   const [showVictoryModal, setShowVictoryModal] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [playerNickname, setPlayerNickname] = useState("");
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);

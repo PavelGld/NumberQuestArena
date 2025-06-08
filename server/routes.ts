@@ -8,7 +8,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get leaderboard
   app.get("/api/leaderboard", async (req, res) => {
     try {
-      const leaderboard = await storage.getLeaderboard();
+      const { difficulty, boardSize } = req.query;
+      const leaderboard = await storage.getLeaderboard(
+        difficulty as string,
+        boardSize ? parseInt(boardSize as string) : undefined
+      );
       res.json(leaderboard);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch leaderboard" });

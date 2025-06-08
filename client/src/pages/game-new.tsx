@@ -407,6 +407,7 @@ export default function Game() {
       submitScoreMutation.mutate({
         nickname: playerNickname.trim(),
         time: gameState.gameTime,
+        attempts: gameState.attemptCount,
         difficulty: gameState.difficulty,
         boardSize: gameState.boardSize,
       });
@@ -774,7 +775,12 @@ export default function Game() {
                         }`}>
                           #{index + 1}
                         </span>
-                        <span className="font-medium">{entry.nickname}</span>
+                        <div>
+                          <div className="font-medium">{entry.nickname}</div>
+                          <div className="text-xs text-gray-500">
+                            {entry.attempts} попыток
+                          </div>
+                        </div>
                       </div>
                       <span className="font-mono font-semibold">
                         {formatTime(entry.time)}

@@ -747,7 +747,7 @@ export default function Game() {
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <Target className="text-indigo-500 mr-2" />
-                  Найдите числа:
+                  {t('game.targets.title')}
                 </h3>
 
                 <div className="space-y-3">
@@ -781,9 +781,9 @@ export default function Game() {
 
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-600">Прогресс:</span>
+                    <span className="text-gray-600">{t('game.progress.title')}:</span>
                     <span className="font-semibold text-gray-900">
-                      {gameState.foundTargets.size} из {gameState.targets.length}
+                      {gameState.foundTargets.size} {t('game.progress.of')} {gameState.targets.length}
                     </span>
                   </div>
                   <Progress 
@@ -799,20 +799,20 @@ export default function Game() {
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <BarChart3 className="text-amber-500 mr-2" />
-                  Статистика
+                  {t('game.stats.title')}
                 </h3>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Попыток:</span>
+                    <span className="text-gray-600">{t('game.stats.attempts')}:</span>
                     <span className="font-semibold text-gray-900">{gameState.attemptCount}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Найдено:</span>
+                    <span className="text-gray-600">{t('game.stats.found')}:</span>
                     <span className="font-semibold text-emerald-600">{gameState.foundTargets.size}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Осталось:</span>
+                    <span className="text-gray-600">{t('game.stats.remaining')}:</span>
                     <span className="font-semibold text-amber-600">
                       {gameState.targets.length - gameState.foundTargets.size}
                     </span>
@@ -827,7 +827,7 @@ export default function Game() {
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold text-green-900 mb-3 flex items-center">
                     <Target className="text-green-600 mr-2" />
-                    Решения
+                    {t('game.solutions.title')}
                   </h3>
 
                   <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -850,7 +850,7 @@ export default function Game() {
 
                   {gameState.solutions.length === 0 && (
                     <p className="text-green-700 text-sm">
-                      Не найдено решений для текущих целевых чисел.
+                      {t('game.solutions.noSolutions')}
                     </p>
                   )}
                 </CardContent>
@@ -863,14 +863,14 @@ export default function Game() {
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold text-indigo-900 mb-3 flex items-center">
                     <Info className="text-indigo-600 mr-2" />
-                    Как играть
+                    {t('game.instructions.title')}
                   </h3>
 
                   <div className="space-y-2 text-sm text-indigo-800">
-                    <p>• Выделяйте непрерывные линии (горизонтально или вертикально)</p>
-                    <p>• Начинайте с числа, затем операция, затем число</p>
-                    <p>• Найдите все целевые числа как можно быстрее</p>
-                    <p>• Операции выполняются слева направо</p>
+                    <p>• {t('game.instructions.rule1')}</p>
+                    <p>• {t('game.instructions.rule2')}</p>
+                    <p>• {t('game.instructions.rule3')}</p>
+                    <p>• {t('game.instructions.rule4')}</p>
                   </div>
                 </CardContent>
               </Card>

@@ -120,9 +120,9 @@ export default function Game() {
       // Row targets
       for (let startCol = 0; startCol < 5; startCol += 2) {
         for (let endCol = startCol + 2; endCol < 5; endCol += 2) {
-          const expression = [];
+          const expression: (number | Operation)[] = [];
           for (let col = startCol; col <= endCol; col++) {
-            expression.push(board[i][col].value);
+            expression.push(board[i][col].value as number | Operation);
           }
           const result = evaluateExpression(expression);
           if (result !== null && result > 0 && result <= 100 && !usedResults.has(result)) {
@@ -138,9 +138,9 @@ export default function Game() {
       // Column targets
       for (let startRow = 0; startRow < 5; startRow += 2) {
         for (let endRow = startRow + 2; endRow < 5; endRow += 2) {
-          const expression = [];
+          const expression: (number | Operation)[] = [];
           for (let row = startRow; row <= endRow; row++) {
-            expression.push(board[row][i].value);
+            expression.push(board[row][i].value as number | Operation);
           }
           const result = evaluateExpression(expression);
           if (result !== null && result > 0 && result <= 100 && !usedResults.has(result)) {
@@ -223,7 +223,7 @@ export default function Game() {
 
   // Check if path is valid (continuous horizontal or vertical)
   const isValidPath = (cells: { row: number; col: number }[]): boolean => {
-    if (cells.length < 2) return false;
+    if (cells.length < 2) return true;
 
     // Check if all cells are in the same row or column
     const allSameRow = cells.every(cell => cell.row === cells[0].row);
@@ -231,16 +231,14 @@ export default function Game() {
 
     if (!allSameRow && !allSameCol) return false;
 
-    // Check if cells are continuous
+    // Check if cells are continuous in the order they were selected
     if (allSameRow) {
-      const cols = cells.map(cell => cell.col).sort((a, b) => a - b);
-      for (let i = 1; i < cols.length; i++) {
-        if (cols[i] - cols[i - 1] !== 1) return false;
+      for (let i = 1; i < cells.length; i++) {
+        if (Math.abs(cells[i].col - cells[i - 1].col) !== 1) return false;
       }
     } else {
-      const rows = cells.map(cell => cell.row).sort((a, b) => a - b);
-      for (let i = 1; i < rows.length; i++) {
-        if (rows[i] - rows[i - 1] !== 1) return false;
+      for (let i = 1; i < cells.length; i++) {
+        if (Math.abs(cells[i].row - cells[i - 1].row) !== 1) return false;
       }
     }
 
@@ -266,18 +264,30 @@ export default function Game() {
     
     // Determine if we're selecting horizontally or vertically
     if (selectionStart.row === row) {
-      // Horizontal selection
-      const startCol = Math.min(selectionStart.col, col);
-      const endCol = Math.max(selectionStart.col, col);
-      for (let c = startCol; c <= endCol; c++) {
-        newPath.push({ row, col: c });
+      // Horizontal selection - maintain direction based on start and end
+      if (selectionStart.col <= col) {
+        // Left to right
+        for (let c = selectionStart.col; c <= col; c++) {
+          newPath.push({ row, col: c });
+        }
+      } else {
+        // Right to left
+        for (let c = selectionStart.col; c >= col; c--) {
+          newPath.push({ row, col: c });
+        }
       }
     } else if (selectionStart.col === col) {
-      // Vertical selection
-      const startRow = Math.min(selectionStart.row, row);
-      const endRow = Math.max(selectionStart.row, row);
-      for (let r = startRow; r <= endRow; r++) {
-        newPath.push({ row: r, col });
+      // Vertical selection - maintain direction based on start and end
+      if (selectionStart.row <= row) {
+        // Top to bottom
+        for (let r = selectionStart.row; r <= row; r++) {
+          newPath.push({ row: r, col });
+        }
+      } else {
+        // Bottom to top
+        for (let r = selectionStart.row; r >= row; r--) {
+          newPath.push({ row: r, col });
+        }
       }
     } else {
       // Invalid selection (diagonal), keep only start cell
@@ -296,7 +306,7 @@ export default function Game() {
       if (startCell.type !== "number") return;
     }
 
-    const expression = [];
+    const expression: (number | Operation)[] = [];
     let validExpression = true;
 
     for (let i = 0; i < cells.length; i++) {
@@ -307,7 +317,7 @@ export default function Game() {
         validExpression = false;
         break;
       }
-      expression.push(cell.value);
+      expression.push(cell.value as number | Operation);
     }
 
     if (!validExpression && cells.length > 1) return;

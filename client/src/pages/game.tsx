@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle } from "lucide-react";
+import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings } from "lucide-react";
 import type { LeaderboardEntry, InsertLeaderboardEntry } from "@shared/schema";
 
 type CellType = "number" | "operation";
@@ -37,6 +38,18 @@ interface GameState {
   boardSize: BoardSize;
 }
 
+const DIFFICULTY_LABELS = {
+  easy: "Легко",
+  medium: "Средне", 
+  hard: "Сложно"
+};
+
+const BOARD_SIZE_LABELS = {
+  5: "5×5",
+  10: "10×10",
+  15: "15×15"
+};
+
 export default function Game() {
   const { toast } = useToast();
   const [gameState, setGameState] = useState<GameState>({
@@ -59,6 +72,8 @@ export default function Game() {
   const [playerNickname, setPlayerNickname] = useState("");
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
+  const [tempDifficulty, setTempDifficulty] = useState<Difficulty>(gameState.difficulty);
+  const [tempBoardSize, setTempBoardSize] = useState<BoardSize>(gameState.boardSize);
 
   // Fetch leaderboard
   const { data: leaderboard = [] } = useQuery<LeaderboardEntry[]>({
@@ -411,6 +426,11 @@ export default function Game() {
     }
   };
 
+  // Handle settings save
+  const handleSaveSettings = () => {
+    initializeGame(tempDifficulty, tempBoardSize);
+  };
+
   // Format time
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -429,16 +449,19 @@ export default function Game() {
 
   const getCellClasses = (cell: Cell, row: number, col: number) => {
     const isSelected = isCellSelected(row, col);
-    const baseClasses = "aspect-square border-2 rounded-lg flex items-center justify-center text-2xl font-bold transition-all cursor-pointer select-none";
+    const baseClasses = "aspect-square border-2 rounded-lg flex items-center justify-center font-bold transition-all cursor-pointer select-none";
+    
+    // Adjust text size based on board size
+    const textSize = gameState.boardSize === 5 ? "text-2xl" : gameState.boardSize === 10 ? "text-lg" : "text-sm";
     
     if (isSelected) {
-      return `${baseClasses} bg-indigo-500 border-indigo-600 text-white`;
+      return `${baseClasses} ${textSize} bg-indigo-500 border-indigo-600 text-white`;
     }
     
     if (cell.type === "number") {
-      return `${baseClasses} bg-white border-gray-200 text-gray-900 hover:border-indigo-300 hover:bg-indigo-50`;
+      return `${baseClasses} ${textSize} bg-white border-gray-200 text-gray-900 hover:border-indigo-300 hover:bg-indigo-50`;
     } else {
-      return `${baseClasses} bg-amber-100 border-amber-200 text-amber-800 hover:border-amber-400 hover:bg-amber-200`;
+      return `${baseClasses} ${textSize} bg-amber-100 border-amber-200 text-amber-800 hover:border-amber-400 hover:bg-amber-200`;
     }
   };
 
@@ -452,7 +475,12 @@ export default function Game() {
               <div className="bg-indigo-500 p-2 rounded-lg">
                 <Calculator className="text-white text-xl" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">Арифметическая эстафета</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Арифметическая эстафета</h1>
+                <div className="text-sm text-gray-600">
+                  {DIFFICULTY_LABELS[gameState.difficulty]} • {BOARD_SIZE_LABELS[gameState.boardSize]}
+                </div>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="bg-gray-100 px-4 py-2 rounded-lg">
@@ -460,7 +488,18 @@ export default function Game() {
                   {formatTime(gameState.gameTime)}
                 </span>
               </div>
-              <Button onClick={initializeGame} className="bg-indigo-500 hover:bg-indigo-600">
+              <Button 
+                onClick={() => setShowSettings(true)} 
+                variant="outline" 
+                className="border-gray-300"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Настройки
+              </Button>
+              <Button 
+                onClick={() => initializeGame()} 
+                className="bg-indigo-500 hover:bg-indigo-600"
+              >
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Новая игра
               </Button>
@@ -484,7 +523,10 @@ export default function Game() {
                 </div>
 
                 <div 
-                  className="grid grid-cols-5 gap-2 max-w-md mx-auto bg-gray-100 p-4 rounded-xl"
+                  className={`grid gap-1 mx-auto bg-gray-100 p-4 rounded-xl max-w-fit`}
+                  style={{
+                    gridTemplateColumns: `repeat(${gameState.boardSize}, minmax(0, 1fr))`
+                  }}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
                 >
@@ -493,6 +535,10 @@ export default function Game() {
                       <div
                         key={`${rowIndex}-${colIndex}`}
                         className={getCellClasses(cell, rowIndex, colIndex)}
+                        style={{
+                          width: gameState.boardSize === 5 ? "60px" : gameState.boardSize === 10 ? "40px" : "30px",
+                          height: gameState.boardSize === 5 ? "60px" : gameState.boardSize === 10 ? "40px" : "30px"
+                        }}
                         onMouseDown={() => handleCellMouseDown(rowIndex, colIndex)}
                         onMouseEnter={() => handleCellMouseEnter(rowIndex, colIndex)}
                       >

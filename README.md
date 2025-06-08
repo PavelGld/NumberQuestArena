@@ -84,15 +84,7 @@ npm run dev
 
 ## 🌐 Развертывание на сервере
 
-### Автоматическое развертывание на Replit:
-
-1. Импортируйте проект в Replit
-2. Настройте переменные окружения:
-   - `DATABASE_URL` - строка подключения к PostgreSQL
-3. Запустите команду `npm run dev`
-4. Используйте Replit Deployments для продакшн развертывания
-
-### Развертывание на других платформах:
+### Развертывание:
 
 1. **Подготовка:**
 ```bash
@@ -103,12 +95,21 @@ npm run build
 ```bash
 DATABASE_URL=your_postgresql_connection_string
 NODE_ENV=production
+PORT=5000
 ```
 
 3. **Запуск:**
 ```bash
 npm start
 ```
+
+### Поддерживаемые платформы:
+- **Heroku** - добавьте `Procfile` с содержимым `web: npm start`
+- **Vercel** - используйте `vercel.json` для конфигурации
+- **Railway** - автоматическое развертывание из GitHub
+- **DigitalOcean App Platform** - поддержка Node.js приложений
+- **AWS Elastic Beanstalk** - развертывание Express приложений
+- **Google Cloud Run** - контейнерное развертывание
 
 ## 📁 Структура проекта
 
@@ -199,6 +200,47 @@ npm run format
 3. Внесите изменения с комментариями
 4. Создайте Pull Request
 
+### Docker развертывание (опционально):
+
+Создайте `Dockerfile`:
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 5000
+CMD ["npm", "start"]
+```
+
+И `docker-compose.yml`:
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/arithmetic_relay
+      - NODE_ENV=production
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=arithmetic_relay
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
 ## 🔗 Полезные ссылки
 
 - [React документация](https://react.dev/)
@@ -206,3 +248,4 @@ npm run format
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [shadcn/ui](https://ui.shadcn.com/)
+- [PostgreSQL документация](https://www.postgresql.org/docs/)

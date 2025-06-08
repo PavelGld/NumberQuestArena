@@ -1,15 +1,22 @@
 import { createContext, useContext } from 'react';
 
+// Поддерживаемые языки приложения
 export type Language = 'ru' | 'en';
 
+// Тип контекста для системы интернационализации
 export interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  language: Language; // Текущий выбранный язык
+  setLanguage: (lang: Language) => void; // Функция смены языка
+  t: (key: string) => string; // Функция перевода по ключу
 }
 
+// Контекст React для передачи языковых настроек через компоненты
 export const LanguageContext = createContext<LanguageContextType | null>(null);
 
+/**
+ * Хук для использования системы интернационализации
+ * @returns Объект с текущим языком, функцией смены языка и функцией перевода
+ */
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
@@ -18,6 +25,7 @@ export const useLanguage = () => {
   return context;
 };
 
+// Словарь переводов для поддерживаемых языков
 export const translations = {
   ru: {
     'game.title': 'Арифметическая эстафета',

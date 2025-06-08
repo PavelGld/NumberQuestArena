@@ -665,7 +665,7 @@ export default function Game() {
                 className="bg-indigo-500 hover:bg-indigo-600"
               >
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Новая игра
+                {t('game.newGame')}
               </Button>
             </div>
           </div>
@@ -680,9 +680,9 @@ export default function Game() {
             <Card className="shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Игровое поле</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{t('game.board.title')}</h2>
                   <Badge variant={gameState.isPlaying ? "default" : "secondary"}>
-                    {gameState.isPlaying ? "Игра идёт" : "Игра окончена"}
+                    {gameState.isPlaying ? t('game.status.playing') : t('game.status.finished')}
                   </Badge>
                 </div>
 
@@ -728,7 +728,7 @@ export default function Game() {
                     </div>
                     {gameState.currentResult !== null && (
                       <div className="text-right">
-                        <div className="text-sm text-gray-500 mb-1">Результат</div>
+                        <div className="text-sm text-gray-500 mb-1">{t('game.result')}</div>
                         <div className="text-3xl font-bold text-indigo-600">
                           {gameState.currentResult}
                         </div>
@@ -996,7 +996,7 @@ export default function Game() {
             </div>
 
             <div className="text-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
-              {DIFFICULTY_LABELS[leaderboardDifficulty]} • {BOARD_SIZE_LABELS[leaderboardBoardSize]}
+              {t(`difficulty.${leaderboardDifficulty}`)} • {t(`boardSize.${leaderboardBoardSize}`)}
             </div>
 
             {/* Leaderboard List */}
@@ -1056,12 +1056,12 @@ export default function Game() {
 
             {/* Quick Category Buttons */}
             <div className="border-t pt-4">
-              <div className="text-xs text-gray-500 mb-2 text-center">Быстрый переход:</div>
+              <div className="text-xs text-gray-500 mb-2 text-center">{t('leaderboard.quickJump')}:</div>
               <div className="grid grid-cols-3 gap-2">
                 {(["easy", "medium", "hard"] as Difficulty[]).map((difficulty) => (
                   <div key={difficulty} className="space-y-1">
                     <div className="text-xs font-medium text-gray-600 text-center">
-                      {DIFFICULTY_LABELS[difficulty]}
+                      {t(`difficulty.${difficulty}`)}
                     </div>
                     <div className="grid grid-cols-3 gap-1">
                       {([5, 10, 15] as BoardSize[]).map((size) => (
@@ -1079,7 +1079,7 @@ export default function Game() {
                             setLeaderboardBoardSize(size);
                           }}
                         >
-                          {BOARD_SIZE_LABELS[size]}
+                          {t(`boardSize.${size}`)}
                         </Button>
                       ))}
                     </div>

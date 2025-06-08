@@ -642,6 +642,15 @@ export default function Game() {
                   {formatTime(gameState.gameTime)}
                 </span>
               </div>
+              <Select value={language} onValueChange={(value: Language) => setLanguage(value)}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ru">🇷🇺 RU</SelectItem>
+                  <SelectItem value="en">🇺🇸 EN</SelectItem>
+                </SelectContent>
+              </Select>
               <Button 
                 onClick={() => setShowSettings(true)} 
                 variant="outline" 
@@ -981,7 +990,7 @@ export default function Game() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Размер поля</label>
+                <label className="text-sm font-medium text-gray-700">{t('leaderboard.boardSize')}</label>
                 <Select value={leaderboardBoardSize.toString()} onValueChange={(value) => setLeaderboardBoardSize(parseInt(value) as BoardSize)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -1005,8 +1014,8 @@ export default function Game() {
                 {leaderboard.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Trophy className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                    <p>Пока нет результатов для этой категории</p>
-                    <p className="text-sm">Будьте первым!</p>
+                    <p>{t('leaderboard.noResults')}</p>
+                    <p className="text-sm">{t('leaderboard.beFirst')}</p>
                   </div>
                 ) : (
                   leaderboard.map((entry, index) => (
@@ -1095,33 +1104,33 @@ export default function Game() {
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Настройки игры</DialogTitle>
+            <DialogTitle>{t('settings.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Сложность</label>
+              <label className="text-sm font-medium text-gray-700">{t('settings.difficulty')}</label>
               <Select value={tempDifficulty} onValueChange={(value: Difficulty) => setTempDifficulty(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="easy">Легко (+, -, *)</SelectItem>
-                  <SelectItem value="medium">Средне (+, -, *, /)</SelectItem>
-                  <SelectItem value="hard">Сложно (+, -, *, /, ^)</SelectItem>
+                  <SelectItem value="easy">{t('settings.easyDesc')}</SelectItem>
+                  <SelectItem value="medium">{t('settings.mediumDesc')}</SelectItem>
+                  <SelectItem value="hard">{t('settings.hardDesc')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Размер поля</label>
+              <label className="text-sm font-medium text-gray-700">{t('settings.boardSize')}</label>
               <Select value={tempBoardSize.toString()} onValueChange={(value) => setTempBoardSize(parseInt(value) as BoardSize)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="5">5×5 (4 цели)</SelectItem>
-                  <SelectItem value="10">10×10 (5 целей)</SelectItem>
-                  <SelectItem value="15">15×15 (7 целей)</SelectItem>
+                  <SelectItem value="5">{t('settings.size5')}</SelectItem>
+                  <SelectItem value="10">{t('settings.size10')}</SelectItem>
+                  <SelectItem value="15">{t('settings.size15')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1132,13 +1141,13 @@ export default function Game() {
                 variant="outline" 
                 className="flex-1"
               >
-                Отмена
+                {t('settings.cancel')}
               </Button>
               <Button 
                 onClick={handleSaveSettings} 
                 className="flex-1 bg-indigo-500 hover:bg-indigo-600"
               >
-                Начать игру
+                {t('settings.startGame')}
               </Button>
             </div>
           </div>

@@ -210,10 +210,27 @@ export default function Game() {
             result *= operand;
             break;
           case "/":
-            if (operand === 0) return null;
+            if (operand === 0) {
+              // Show division by zero error
+              toast({
+                title: t('game.invalidOperation'),
+                description: t('game.divisionByZero'),
+                variant: "destructive",
+              });
+              return null;
+            }
             result /= operand;
             break;
           case "^":
+            if (result < 0) {
+              // Show negative power error
+              toast({
+                title: t('game.invalidOperation'),
+                description: t('game.negativePower'),
+                variant: "destructive",
+              });
+              return null;
+            }
             result = Math.pow(result, operand);
             break;
         }

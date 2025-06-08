@@ -75,6 +75,9 @@ export const translations = {
     'toast.foundNumber': 'Вы нашли число',
     'game.currentSelection': 'Текущий выбор:',
     'game.selectPath': 'Выберите путь на поле',
+    'game.invalidOperation': 'Некорректная операция',
+    'game.divisionByZero': 'Деление на ноль недопустимо',
+    'game.negativePower': 'Возведение отрицательного числа в степень недопустимо',
   },
   en: {
     'game.title': 'Arithmetic Relay',
@@ -132,5 +135,8 @@ export const translations = {
     'toast.foundNumber': 'You found number',
     'game.currentSelection': 'Current selection:',
     'game.selectPath': 'Select a path on the field',
+    'game.invalidOperation': 'Invalid operation',
+    'game.divisionByZero': 'Division by zero is not allowed',
+    'game.negativePower': 'Raising negative number to power is not allowed',
   }
 };

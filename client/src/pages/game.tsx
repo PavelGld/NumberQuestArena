@@ -74,10 +74,12 @@ export default function Game() {
   const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
   const [tempDifficulty, setTempDifficulty] = useState<Difficulty>(gameState.difficulty);
   const [tempBoardSize, setTempBoardSize] = useState<BoardSize>(gameState.boardSize);
+  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<Difficulty>(gameState.difficulty);
+  const [leaderboardBoardSize, setLeaderboardBoardSize] = useState<BoardSize>(gameState.boardSize);
 
-  // Fetch leaderboard
+  // Fetch leaderboard for current category
   const { data: leaderboard = [] } = useQuery<LeaderboardEntry[]>({
-    queryKey: ["/api/leaderboard", gameState.difficulty, gameState.boardSize],
+    queryKey: ["/api/leaderboard", leaderboardDifficulty, leaderboardBoardSize],
   });
 
   // Submit score mutation
@@ -753,7 +755,7 @@ export default function Game() {
 
       {/* Leaderboard Modal */}
       <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center text-2xl">
               <Trophy className="mr-3 text-yellow-500" />
@@ -761,46 +763,124 @@ export default function Game() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="overflow-y-auto">
-            <div className="space-y-3">
-              {leaderboard.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">
-                  Пока никто не играл. Будьте первым!
-                </p>
-              ) : (
-                leaderboard.map((entry, index) => (
-                  <div
-                    key={entry.id}
-                    className={`flex items-center justify-between p-3 rounded-lg ${
-                      index === 0
-                        ? "bg-yellow-50 border border-yellow-200"
-                        : "bg-gray-50"
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          index === 0
-                            ? "bg-yellow-500 text-white"
-                            : "bg-gray-400 text-white"
-                        }`}
-                      >
-                        {index + 1}
-                      </div>
-                      <span className="font-semibold text-gray-900">
-                        {entry.nickname}
-                      </span>
-                    </div>
-                    <span
-                      className={`font-mono text-lg font-semibold ${
-                        index === 0 ? "text-yellow-700" : "text-gray-700"
+          <div className="space-y-4">
+            {/* Category Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Сложность</label>
+                <Select value={leaderboardDifficulty} onValueChange={(value: Difficulty) => setLeaderboardDifficulty(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">Легко</SelectItem>
+                    <SelectItem value="medium">Средне</SelectItem>
+                    <SelectItem value="hard">Сложно</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Размер поля</label>
+                <Select value={leaderboardBoardSize.toString()} onValueChange={(value) => setLeaderboardBoardSize(parseInt(value) as BoardSize)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5×5</SelectItem>
+                    <SelectItem value="10">10×10</SelectItem>
+                    <SelectItem value="15">15×15</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="text-center text-sm text-gray-600 bg-gray-50 rounded-lg p-2">
+              {DIFFICULTY_LABELS[leaderboardDifficulty]} • {BOARD_SIZE_LABELS[leaderboardBoardSize]}
+            </div>
+
+            {/* Leaderboard List */}
+            <div className="overflow-y-auto max-h-96">
+              <div className="space-y-2">
+                {leaderboard.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Trophy className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    <p>Пока нет результатов для этой категории</p>
+                    <p className="text-sm">Будьте первым!</p>
+                  </div>
+                ) : (
+                  leaderboard.map((entry, index) => (
+                    <div
+                      key={entry.id}
+                      className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                        index === 0
+                          ? "bg-amber-50 border border-amber-200"
+                          : index === 1
+                          ? "bg-gray-50 border border-gray-200"
+                          : index === 2
+                          ? "bg-orange-50 border border-orange-200"
+                          : "bg-white border border-gray-100"
                       }`}
                     >
-                      {formatTime(entry.time)}
-                    </span>
+                      <div className="flex items-center space-x-3">
+                        <span
+                          className={`text-lg font-bold ${
+                            index === 0
+                              ? "text-amber-600"
+                              : index === 1
+                              ? "text-gray-600"
+                              : index === 2
+                              ? "text-orange-600"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          #{index + 1}
+                        </span>
+                        <span className="text-gray-900 font-medium">
+                          {entry.nickname}
+                        </span>
+                      </div>
+                      <span className="text-gray-700 font-mono font-semibold">
+                        {formatTime(entry.time)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Quick Category Buttons */}
+            <div className="border-t pt-4">
+              <div className="text-xs text-gray-500 mb-2 text-center">Быстрый переход:</div>
+              <div className="grid grid-cols-3 gap-2">
+                {(["easy", "medium", "hard"] as Difficulty[]).map((difficulty) => (
+                  <div key={difficulty} className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600 text-center">
+                      {DIFFICULTY_LABELS[difficulty]}
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      {([5, 10, 15] as BoardSize[]).map((size) => (
+                        <Button
+                          key={`${difficulty}-${size}`}
+                          variant={
+                            leaderboardDifficulty === difficulty && leaderboardBoardSize === size
+                              ? "default"
+                              : "outline"
+                          }
+                          size="sm"
+                          className="text-xs h-6 px-1"
+                          onClick={() => {
+                            setLeaderboardDifficulty(difficulty);
+                            setLeaderboardBoardSize(size);
+                          }}
+                        >
+                          {BOARD_SIZE_LABELS[size]}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                ))
-              )}
+                ))}
+              </div>
             </div>
           </div>
         </DialogContent>

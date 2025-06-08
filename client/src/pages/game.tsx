@@ -368,7 +368,30 @@ export default function Game() {
 
     if (!validExpression && cells.length > 1) return;
 
-    const expressionString = expression.join(" ");
+    // Format expression with proper parentheses for clarity
+    let expressionString = "";
+    if (expression.length >= 3) {
+      if (expression.length === 3) {
+        expressionString = expression.join(" ");
+      } else {
+        // For longer expressions, add parentheses to show order of operations
+        let formatted = `${expression[0]}`;
+        for (let i = 1; i < expression.length; i += 2) {
+          const operation = expression[i];
+          const operand = expression[i + 1];
+          
+          if (i === 1) {
+            formatted = `(${formatted} ${operation} ${operand})`;
+          } else {
+            formatted = `(${formatted} ${operation} ${operand})`;
+          }
+        }
+        expressionString = formatted;
+      }
+    } else {
+      expressionString = expression.join(" ");
+    }
+    
     const result = expression.length >= 3 ? evaluateExpression(expression) : null;
 
     setGameState(prev => ({

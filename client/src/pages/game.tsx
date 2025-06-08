@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings } from "lucide-react";
+import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings, Flag } from "lucide-react";
 import type { LeaderboardEntry, InsertLeaderboardEntry } from "@shared/schema";
 
 type CellType = "number" | "operation";
@@ -309,7 +309,7 @@ export default function Game() {
     }
     
     return solutions;
-  }, [evaluateExpression]);
+  }, []);
 
   // Handle give up
   const handleGiveUp = () => {
@@ -594,8 +594,16 @@ export default function Game() {
     return gameState.selectedCells.some(cell => cell.row === row && cell.col === col);
   };
 
+  const isCellInSolution = (row: number, col: number) => {
+    if (!gameState.showSolutions) return false;
+    return gameState.solutions.some(solution => 
+      solution.cells.some(cell => cell.row === row && cell.col === col)
+    );
+  };
+
   const getCellClasses = (cell: Cell, row: number, col: number) => {
     const isSelected = isCellSelected(row, col);
+    const isInSolution = isCellInSolution(row, col);
     const baseClasses = "aspect-square border-2 rounded-lg flex items-center justify-center font-bold transition-all cursor-pointer select-none";
     
     // Adjust text size based on board size
@@ -603,6 +611,14 @@ export default function Game() {
     
     if (isSelected) {
       return `${baseClasses} ${textSize} bg-indigo-500 border-indigo-600 text-white`;
+    }
+    
+    if (isInSolution) {
+      if (cell.type === "number") {
+        return `${baseClasses} ${textSize} bg-green-100 border-green-400 text-green-800 hover:border-green-500`;
+      } else {
+        return `${baseClasses} ${textSize} bg-green-200 border-green-400 text-green-900 hover:border-green-500`;
+      }
     }
     
     if (cell.type === "number") {
@@ -643,6 +659,16 @@ export default function Game() {
                 <Settings className="mr-2 h-4 w-4" />
                 Настройки
               </Button>
+              {gameState.isPlaying && (
+                <Button 
+                  onClick={handleGiveUp}
+                  variant="outline"
+                  className="border-red-300 text-red-600 hover:bg-red-50"
+                >
+                  <Flag className="mr-2 h-4 w-4" />
+                  Сдаться
+                </Button>
+              )}
               <Button 
                 onClick={() => initializeGame()} 
                 className="bg-indigo-500 hover:bg-indigo-600"
@@ -804,22 +830,60 @@ export default function Game() {
               </CardContent>
             </Card>
 
-            {/* Instructions */}
-            <Card className="bg-indigo-50 border-indigo-200">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-indigo-900 mb-3 flex items-center">
-                  <Info className="text-indigo-600 mr-2" />
-                  Как играть
-                </h3>
+            {/* Solutions Display (when showing solutions) */}
+            {gameState.showSolutions && (
+              <Card className="bg-green-50 border-green-200">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-green-900 mb-3 flex items-center">
+                    <Target className="text-green-600 mr-2" />
+                    Решения
+                  </h3>
 
-                <div className="space-y-2 text-sm text-indigo-800">
-                  <p>• Выделяйте непрерывные линии (горизонтально или вертикально)</p>
-                  <p>• Начинайте с числа, затем операция, затем число</p>
-                  <p>• Найдите все целевые числа как можно быстрее</p>
-                  <p>• Операции выполняются слева направо</p>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {gameState.solutions.map((solution, index) => (
+                      <div 
+                        key={index}
+                        className="p-3 bg-white rounded-lg border border-green-200"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-sm text-gray-700">
+                            {solution.expression}
+                          </span>
+                          <span className="font-bold text-green-800">
+                            = {solution.target}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {gameState.solutions.length === 0 && (
+                    <p className="text-green-700 text-sm">
+                      Не найдено решений для текущих целевых чисел.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Instructions */}
+            {!gameState.showSolutions && (
+              <Card className="bg-indigo-50 border-indigo-200">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-indigo-900 mb-3 flex items-center">
+                    <Info className="text-indigo-600 mr-2" />
+                    Как играть
+                  </h3>
+
+                  <div className="space-y-2 text-sm text-indigo-800">
+                    <p>• Выделяйте непрерывные линии (горизонтально или вертикально)</p>
+                    <p>• Начинайте с числа, затем операция, затем число</p>
+                    <p>• Найдите все целевые числа как можно быстрее</p>
+                    <p>• Операции выполняются слева направо</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

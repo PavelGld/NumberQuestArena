@@ -9,7 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings, Flag } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
+import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings, Flag, Languages } from "lucide-react";
 import type { LeaderboardEntry, InsertLeaderboardEntry } from "@shared/schema";
 
 type CellType = "number" | "operation";
@@ -40,20 +41,9 @@ interface GameState {
   solutions: { cells: { row: number; col: number }[]; target: number; expression: string }[];
 }
 
-const DIFFICULTY_LABELS = {
-  easy: "Легко",
-  medium: "Средне", 
-  hard: "Сложно"
-};
-
-const BOARD_SIZE_LABELS = {
-  5: "5×5",
-  10: "10×10",
-  15: "15×15"
-};
-
 export default function Game() {
   const { toast } = useToast();
+  const { t, language, setLanguage } = useLanguage();
   const [gameState, setGameState] = useState<GameState>({
     board: [],
     targets: [],
@@ -538,8 +528,8 @@ export default function Game() {
         setGameState(prev => ({ ...prev, foundTargets: newFoundTargets }));
         
         toast({
-          title: "Отлично!",
-          description: `Вы нашли число ${result}!`,
+          title: t('toast.found'),
+          description: `${t('toast.foundNumber')} ${result}!`,
         });
 
         if (newFoundTargets.size === gameState.targets.length) {
@@ -640,9 +630,9 @@ export default function Game() {
                 <Calculator className="text-white text-xl" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Арифметическая эстафета</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t('game.title')}</h1>
                 <div className="text-sm text-gray-600">
-                  {DIFFICULTY_LABELS[gameState.difficulty]} • {BOARD_SIZE_LABELS[gameState.boardSize]}
+                  {t(`difficulty.${gameState.difficulty}`)} • {t(`boardSize.${gameState.boardSize}`)}
                 </div>
               </div>
             </div>
@@ -658,7 +648,7 @@ export default function Game() {
                 className="border-gray-300"
               >
                 <Settings className="mr-2 h-4 w-4" />
-                Настройки
+                {t('game.settings')}
               </Button>
               {gameState.isPlaying && (
                 <Button 
@@ -667,7 +657,7 @@ export default function Game() {
                   className="border-red-300 text-red-600 hover:bg-red-50"
                 >
                   <Flag className="mr-2 h-4 w-4" />
-                  Сдаться
+                  {t('game.giveUp')}
                 </Button>
               )}
               <Button 

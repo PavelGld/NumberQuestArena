@@ -13,32 +13,35 @@ import { useLanguage, type Language } from "@/lib/i18n";
 import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings, Flag, Languages } from "lucide-react";
 import type { LeaderboardEntry, InsertLeaderboardEntry } from "@shared/schema";
 
-type CellType = "number" | "operation";
-type Operation = "+" | "-" | "*" | "/" | "^";
-type Difficulty = "easy" | "medium" | "hard";
-type BoardSize = 5 | 10 | 15;
+// Типы для игровой логики
+type CellType = "number" | "operation"; // Тип ячейки: число или операция
+type Operation = "+" | "-" | "*" | "/" | "^"; // Доступные математические операции
+type Difficulty = "easy" | "medium" | "hard"; // Уровни сложности игры
+type BoardSize = 5 | 10 | 15; // Доступные размеры игрового поля
 
+// Интерфейс для ячейки игрового поля
 interface Cell {
-  value: number | Operation;
-  type: CellType;
-  row: number;
-  col: number;
+  value: number | Operation; // Значение: число или математическая операция
+  type: CellType; // Тип ячейки
+  row: number; // Позиция по вертикали
+  col: number; // Позиция по горизонтали
 }
 
+// Основное состояние игры
 interface GameState {
-  board: Cell[][];
-  targets: number[];
-  foundTargets: Set<number>;
-  selectedCells: { row: number; col: number }[];
-  gameTime: number;
-  isPlaying: boolean;
-  attemptCount: number;
-  currentExpression: string;
-  currentResult: number | null;
-  difficulty: Difficulty;
-  boardSize: BoardSize;
-  showSolutions: boolean;
-  solutions: { cells: { row: number; col: number }[]; target: number; expression: string }[];
+  board: Cell[][]; // Двумерный массив игрового поля
+  targets: number[]; // Целевые числа для поиска
+  foundTargets: Set<number>; // Найденные целевые числа
+  selectedCells: { row: number; col: number }[]; // Выбранные ячейки
+  gameTime: number; // Время игры в секундах
+  isPlaying: boolean; // Статус игры (идёт/завершена)
+  attemptCount: number; // Количество попыток
+  currentExpression: string; // Текущее математическое выражение
+  currentResult: number | null; // Результат текущего выражения
+  difficulty: Difficulty; // Уровень сложности
+  boardSize: BoardSize; // Размер игрового поля
+  showSolutions: boolean; // Показывать ли подсказки
+  solutions: { cells: { row: number; col: number }[]; target: number; expression: string }[]; // Найденные решения
 }
 
 export default function Game() {
@@ -189,12 +192,19 @@ export default function Game() {
     return targets.slice(0, targetCount);
   }, []);
 
-  // Evaluate mathematical expression
+  /**
+   * Вычисляет математическое выражение с проверкой на ошибки
+   * @param expression - Массив чисел и операций (число, операция, число, операция, ...)
+   * @returns Результат вычисления или null при ошибке
+   */
   const evaluateExpression = (expression: (number | Operation)[]): number | null => {
+    // Проверяем, что выражение имеет правильную структуру (минимум 3 элемента, нечётное количество)
     if (expression.length < 3 || expression.length % 2 === 0) return null;
     
     try {
-      let result = expression[0] as number;
+      let result = expression[0] as number; // Начинаем с первого числа
+      
+      // Обрабатываем каждую пару операция-число
       for (let i = 1; i < expression.length; i += 2) {
         const operation = expression[i] as Operation;
         const operand = expression[i + 1] as number;
@@ -210,8 +220,8 @@ export default function Game() {
             result *= operand;
             break;
           case "/":
+            // Проверка деления на ноль
             if (operand === 0) {
-              // Show division by zero error
               toast({
                 title: t('game.invalidOperation'),
                 description: t('game.divisionByZero'),
@@ -222,8 +232,8 @@ export default function Game() {
             result /= operand;
             break;
           case "^":
+            // Проверка возведения отрицательного числа в степень
             if (result < 0) {
-              // Show negative power error
               toast({
                 title: t('game.invalidOperation'),
                 description: t('game.negativePower'),
@@ -235,8 +245,10 @@ export default function Game() {
             break;
         }
       }
-      return Math.round(result * 100) / 100; // Round to 2 decimal places
+      // Округляем результат до 2 знаков после запятой для избежания проблем с плавающей точкой
+      return Math.round(result * 100) / 100;
     } catch {
+      // В случае любой другой ошибки возвращаем null
       return null;
     }
   };

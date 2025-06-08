@@ -86,8 +86,12 @@ export default function Game() {
   const submitScoreMutation = useMutation({
     mutationFn: (data: InsertLeaderboardEntry) => 
       apiRequest("POST", "/api/leaderboard", data),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
+      // Invalidate all leaderboard queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
+      // Set leaderboard view to the category where the score was submitted
+      setLeaderboardDifficulty(data.difficulty as Difficulty);
+      setLeaderboardBoardSize(data.boardSize as BoardSize);
       setShowVictoryModal(false);
       setShowLeaderboard(true);
       toast({

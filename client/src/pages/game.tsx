@@ -742,7 +742,7 @@ export default function Game() {
                 type="button" 
                 variant="secondary"
                 className="flex-1"
-                onClick={initializeGame}
+                onClick={() => initializeGame()}
               >
                 Новая игра
               </Button>
@@ -801,6 +801,60 @@ export default function Game() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Modal */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Настройки игры</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Сложность</label>
+              <Select value={tempDifficulty} onValueChange={(value: Difficulty) => setTempDifficulty(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="easy">Легко (+, -, *)</SelectItem>
+                  <SelectItem value="medium">Средне (+, -, *, /)</SelectItem>
+                  <SelectItem value="hard">Сложно (+, -, *, /, ^)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Размер поля</label>
+              <Select value={tempBoardSize.toString()} onValueChange={(value) => setTempBoardSize(parseInt(value) as BoardSize)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5×5 (4 цели)</SelectItem>
+                  <SelectItem value="10">10×10 (5 целей)</SelectItem>
+                  <SelectItem value="15">15×15 (7 целей)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button 
+                onClick={() => setShowSettings(false)} 
+                variant="outline" 
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={handleSaveSettings} 
+                className="flex-1 bg-indigo-500 hover:bg-indigo-600"
+              >
+                Начать игру
+              </Button>
             </div>
           </div>
         </DialogContent>

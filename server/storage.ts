@@ -1,4 +1,6 @@
 import { users, leaderboardEntries, type User, type InsertUser, type LeaderboardEntry, type InsertLeaderboardEntry } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -8,62 +10,52 @@ export interface IStorage {
   getLeaderboard(difficulty?: string, boardSize?: number): Promise<LeaderboardEntry[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private leaderboardEntries: Map<number, LeaderboardEntry>;
-  private currentUserId: number;
-  private currentLeaderboardId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.leaderboardEntries = new Map();
-    this.currentUserId = 1;
-    this.currentLeaderboardId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async createLeaderboardEntry(insertEntry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
-    const id = this.currentLeaderboardId++;
-    const entry: LeaderboardEntry = { 
-      ...insertEntry, 
-      id, 
-      completedAt: new Date() 
-    };
-    this.leaderboardEntries.set(id, entry);
+    const [entry] = await db
+      .insert(leaderboardEntries)
+      .values(insertEntry)
+      .returning();
     return entry;
   }
 
   async getLeaderboard(difficulty?: string, boardSize?: number): Promise<LeaderboardEntry[]> {
-    let entries = Array.from(this.leaderboardEntries.values());
+    let query = db.select().from(leaderboardEntries);
     
-    // Filter by difficulty and board size if provided
+    const conditions = [];
     if (difficulty) {
-      entries = entries.filter(entry => entry.difficulty === difficulty);
+      conditions.push(eq(leaderboardEntries.difficulty, difficulty));
     }
-    if (boardSize) {
-      entries = entries.filter(entry => entry.boardSize === boardSize);
+    if (boardSize !== undefined) {
+      conditions.push(eq(leaderboardEntries.boardSize, boardSize));
     }
     
-    return entries
-      .sort((a, b) => a.time - b.time) // Sort by time ascending (best times first)
-      .slice(0, 10); // Top 10 entries
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    // Sort by time (ascending - faster is better) and limit to top 10
+    const entries = await query.orderBy(leaderboardEntries.time).limit(10);
+    return entries;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

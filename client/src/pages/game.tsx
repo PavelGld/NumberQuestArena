@@ -370,26 +370,50 @@ export default function Game() {
 
     // Format expression with proper parentheses for clarity
     let expressionString = "";
-    if (expression.length >= 3) {
+    
+    // Only show complete number-operation-number patterns
+    if (expression.length >= 3 && expression.length % 2 === 1) {
       if (expression.length === 3) {
         expressionString = expression.join(" ");
       } else {
         // For longer expressions, add parentheses to show order of operations
         let formatted = `${expression[0]}`;
-        for (let i = 1; i < expression.length; i += 2) {
+        for (let i = 1; i < expression.length - 1; i += 2) {
           const operation = expression[i];
           const operand = expression[i + 1];
           
-          if (i === 1) {
-            formatted = `(${formatted} ${operation} ${operand})`;
-          } else {
-            formatted = `(${formatted} ${operation} ${operand})`;
+          if (operand !== undefined) {
+            if (i === 1) {
+              formatted = `(${formatted} ${operation} ${operand})`;
+            } else {
+              formatted = `(${formatted} ${operation} ${operand})`;
+            }
           }
         }
         expressionString = formatted;
       }
+    } else if (expression.length === 1) {
+      // Show single number
+      expressionString = `${expression[0]}`;
+    } else if (expression.length === 2) {
+      // Show number and operation, but wait for next number
+      expressionString = `${expression[0]} ${expression[1]} ...`;
     } else {
-      expressionString = expression.join(" ");
+      // For incomplete expressions, show what we have so far
+      const completeTerms = [];
+      for (let i = 0; i < expression.length; i += 2) {
+        if (expression[i] !== undefined) {
+          completeTerms.push(expression[i]);
+          if (expression[i + 1] !== undefined && expression[i + 2] !== undefined) {
+            completeTerms.push(expression[i + 1]);
+          } else if (expression[i + 1] !== undefined) {
+            completeTerms.push(expression[i + 1]);
+            completeTerms.push("...");
+            break;
+          }
+        }
+      }
+      expressionString = completeTerms.join(" ");
     }
     
     const result = expression.length >= 3 ? evaluateExpression(expression) : null;

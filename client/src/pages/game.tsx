@@ -890,11 +890,11 @@ export default function Game() {
                 className="text-indigo-500 hover:text-indigo-600"
               >
                 <Trophy className="mr-2 h-4 w-4" />
-                Лидерборд
+                {t('leaderboard.title')}
               </Button>
             </div>
             <div className="text-gray-500 text-sm">
-              © 2024 Арифметическая эстафета
+              © 2024 {t('game.title')}
             </div>
           </div>
         </div>
@@ -906,8 +906,8 @@ export default function Game() {
           <DialogHeader>
             <div className="text-center">
               <Trophy className="mx-auto text-4xl text-yellow-500 mb-3" />
-              <DialogTitle className="text-2xl">Поздравляем!</DialogTitle>
-              <p className="text-gray-600 mt-2">Вы нашли все числа!</p>
+              <DialogTitle className="text-2xl">{t('victory.title')}</DialogTitle>
+              <p className="text-gray-600 mt-2">{t('victory.message')}</p>
             </div>
           </DialogHeader>
 
@@ -915,18 +915,18 @@ export default function Game() {
             <div className="text-3xl font-bold text-gray-900 mb-2">
               <span className="font-mono">{formatTime(gameState.gameTime)}</span>
             </div>
-            <p className="text-gray-600">Ваше время</p>
+            <p className="text-gray-600">{t('victory.yourTime')}</p>
           </div>
 
           <form onSubmit={handleSubmitScore} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Введите ваш никнейм:
+                {t('victory.enterNickname')}:
               </label>
               <Input
                 value={playerNickname}
                 onChange={(e) => setPlayerNickname(e.target.value)}
-                placeholder="Ваш никнейм"
+                placeholder={t('victory.nicknamePlaceholder')}
                 maxLength={20}
                 required
               />
@@ -938,7 +938,7 @@ export default function Game() {
                 className="flex-1"
                 disabled={submitScoreMutation.isPending}
               >
-                Сохранить результат
+                {t('victory.saveResult')}
               </Button>
               <Button 
                 type="button" 
@@ -946,7 +946,7 @@ export default function Game() {
                 className="flex-1"
                 onClick={() => initializeGame()}
               >
-                Новая игра
+                {t('game.newGame')}
               </Button>
             </div>
           </form>
@@ -959,7 +959,7 @@ export default function Game() {
           <DialogHeader>
             <DialogTitle className="flex items-center text-2xl">
               <Trophy className="mr-3 text-yellow-500" />
-              Лидерборд
+              {t('leaderboard.title')}
             </DialogTitle>
           </DialogHeader>
 
@@ -967,15 +967,15 @@ export default function Game() {
             {/* Category Selection */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Сложность</label>
+                <label className="text-sm font-medium text-gray-700">{t('leaderboard.difficulty')}</label>
                 <Select value={leaderboardDifficulty} onValueChange={(value: Difficulty) => setLeaderboardDifficulty(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="easy">Легко</SelectItem>
-                    <SelectItem value="medium">Средне</SelectItem>
-                    <SelectItem value="hard">Сложно</SelectItem>
+                    <SelectItem value="easy">{t('difficulty.easy')}</SelectItem>
+                    <SelectItem value="medium">{t('difficulty.medium')}</SelectItem>
+                    <SelectItem value="hard">{t('difficulty.hard')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

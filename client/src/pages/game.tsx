@@ -758,10 +758,10 @@ export default function Game() {
       </header>
 
       {/* Main Game Area */}
-      <main className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 game-container">
+      <main className="max-w-6xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6 game-container">
           {/* Game Board */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 order-1 lg:order-1">
             <Card className="shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -992,20 +992,20 @@ export default function Game() {
 
       {/* Victory Modal */}
       <Dialog open={showVictoryModal} onOpenChange={setShowVictoryModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="text-center">
               <Trophy className="mx-auto text-4xl text-yellow-500 mb-3" />
-              <DialogTitle className="text-2xl">{t('victory.title')}</DialogTitle>
-              <p className="text-gray-600 mt-2">{t('victory.message')}</p>
+              <DialogTitle className="text-xl sm:text-2xl">{t('victory.title')}</DialogTitle>
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">{t('victory.message')}</p>
             </div>
           </DialogHeader>
 
           <div className="text-center mb-6">
-            <div className="text-3xl font-bold text-gray-900 mb-2">
+            <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               <span className="font-mono">{formatTime(gameState.gameTime)}</span>
             </div>
-            <p className="text-gray-600">{t('victory.yourTime')}</p>
+            <p className="text-gray-600 text-sm sm:text-base">{t('victory.yourTime')}</p>
           </div>
 
           <form onSubmit={handleSubmitScore} className="space-y-4">
@@ -1019,13 +1019,14 @@ export default function Game() {
                 placeholder={t('victory.nicknamePlaceholder')}
                 maxLength={20}
                 required
+                className="w-full"
               />
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 type="submit" 
-                className="flex-1"
+                className="flex-1 w-full"
                 disabled={submitScoreMutation.isPending}
               >
                 {t('victory.saveResult')}
@@ -1033,7 +1034,7 @@ export default function Game() {
               <Button 
                 type="button" 
                 variant="secondary"
-                className="flex-1"
+                className="flex-1 w-full"
                 onClick={() => initializeGame()}
               >
                 {t('game.newGame')}
@@ -1045,21 +1046,21 @@ export default function Game() {
 
       {/* Leaderboard Modal */}
       <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="w-[95vw] max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="flex items-center text-2xl">
-              <Trophy className="mr-3 text-yellow-500" />
+            <DialogTitle className="flex items-center text-lg sm:text-2xl">
+              <Trophy className="mr-2 sm:mr-3 text-yellow-500 h-5 w-5 sm:h-6 sm:w-6" />
               {t('leaderboard.title')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Category Selection */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">{t('leaderboard.difficulty')}</label>
                 <Select value={leaderboardDifficulty} onValueChange={(value: Difficulty) => setLeaderboardDifficulty(value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1073,7 +1074,7 @@ export default function Game() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">{t('leaderboard.boardSize')}</label>
                 <Select value={leaderboardBoardSize.toString()} onValueChange={(value) => setLeaderboardBoardSize(parseInt(value) as BoardSize)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1090,7 +1091,7 @@ export default function Game() {
             </div>
 
             {/* Leaderboard List */}
-            <div className="overflow-y-auto max-h-96">
+            <div className="overflow-y-auto max-h-60 sm:max-h-96">
               <div className="space-y-2">
                 {leaderboard.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
@@ -1112,9 +1113,9 @@ export default function Game() {
                           : "bg-white border border-gray-100"
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                         <span
-                          className={`text-lg font-bold ${
+                          className={`text-sm sm:text-lg font-bold flex-shrink-0 ${
                             index === 0
                               ? "text-amber-600"
                               : index === 1
@@ -1126,16 +1127,16 @@ export default function Game() {
                         >
                           #{index + 1}
                         </span>
-                        <div>
-                          <div className="text-gray-900 font-medium">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-gray-900 font-medium text-sm sm:text-base truncate">
                             {entry.nickname}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {entry.attempts} попыток
+                            {entry.attempts} {t('leaderboard.attempts')}
                           </div>
                         </div>
                       </div>
-                      <span className="text-gray-700 font-mono font-semibold">
+                      <span className="text-gray-700 font-mono font-semibold text-sm sm:text-base flex-shrink-0">
                         {formatTime(entry.time)}
                       </span>
                     </div>
@@ -1147,7 +1148,7 @@ export default function Game() {
             {/* Quick Category Buttons */}
             <div className="border-t pt-4">
               <div className="text-xs text-gray-500 mb-2 text-center">{t('leaderboard.quickJump')}:</div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {(["easy", "medium", "hard"] as Difficulty[]).map((difficulty) => (
                   <div key={difficulty} className="space-y-1">
                     <div className="text-xs font-medium text-gray-600 text-center">
@@ -1163,7 +1164,7 @@ export default function Game() {
                               : "outline"
                           }
                           size="sm"
-                          className="text-xs h-6 px-1"
+                          className="text-xs h-8 px-2 sm:h-6 sm:px-1"
                           onClick={() => {
                             setLeaderboardDifficulty(difficulty);
                             setLeaderboardBoardSize(size);
@@ -1183,15 +1184,15 @@ export default function Game() {
 
       {/* Settings Modal */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[95vw] max-w-md mx-4 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t('settings.title')}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">{t('settings.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">{t('settings.difficulty')}</label>
               <Select value={tempDifficulty} onValueChange={(value: Difficulty) => setTempDifficulty(value)}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1205,7 +1206,7 @@ export default function Game() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">{t('settings.boardSize')}</label>
               <Select value={tempBoardSize.toString()} onValueChange={(value) => setTempBoardSize(parseInt(value) as BoardSize)}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1216,17 +1217,17 @@ export default function Game() {
               </Select>
             </div>
 
-            <div className="flex space-x-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 pt-4">
               <Button 
                 onClick={() => setShowSettings(false)} 
                 variant="outline" 
-                className="flex-1"
+                className="flex-1 w-full"
               >
                 {t('settings.cancel')}
               </Button>
               <Button 
                 onClick={handleSaveSettings} 
-                className="flex-1 bg-indigo-500 hover:bg-indigo-600"
+                className="flex-1 w-full bg-indigo-500 hover:bg-indigo-600"
               >
                 {t('settings.startGame')}
               </Button>

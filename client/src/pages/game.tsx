@@ -987,7 +987,7 @@ export default function Game() {
               </Button>
             </div>
             <div className="text-gray-500 text-sm">
-              © 2024 {t('game.title')}
+              © 2025 {t('game.title')}
             </div>
           </div>
         </div>

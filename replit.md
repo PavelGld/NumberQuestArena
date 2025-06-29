@@ -110,9 +110,18 @@ leaderboard_entries (
 - **Backend**: Stateless Express server suitable for horizontal scaling
 - **Sessions**: PostgreSQL-backed sessions for multi-instance support
 
+## Licensing
+
+This project is licensed under the Apache License 2.0. All source files include appropriate copyright headers, and the full license text is available in the LICENSE file.
+
 ## Changelog
-- June 29, 2025. Initial setup
+- June 29, 2025: Initial setup
+- June 29, 2025: Added comprehensive mobile device support with touch events
+- June 29, 2025: Implemented responsive design for all UI components  
+- June 29, 2025: Updated copyright year to 2025
+- June 29, 2025: Added Apache-2.0 license with proper documentation
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+License preference: Apache-2.0 license for open source distribution.

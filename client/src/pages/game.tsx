@@ -699,27 +699,27 @@ export default function Game() {
     <div className="bg-gray-50 min-h-screen">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center space-x-3">
               <div className="bg-indigo-500 p-2 rounded-lg">
-                <Calculator className="text-white text-xl" />
+                <Calculator className="text-white text-lg sm:text-xl" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('game.title')}</h1>
-                <div className="text-sm text-gray-600">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900">{t('game.title')}</h1>
+                <div className="text-xs sm:text-sm text-gray-600">
                   {t(`difficulty.${gameState.difficulty}`)} • {t(`boardSize.${gameState.boardSize}`)}
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-gray-100 px-4 py-2 rounded-lg">
-                <span className="font-mono text-lg font-semibold text-gray-900">
+            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto overflow-x-auto">
+              <div className="bg-gray-100 px-2 sm:px-4 py-1 sm:py-2 rounded-lg flex-shrink-0">
+                <span className="font-mono text-sm sm:text-lg font-semibold text-gray-900">
                   {formatTime(gameState.gameTime)}
                 </span>
               </div>
               <Select value={language} onValueChange={(value: Language) => setLanguage(value)}>
-                <SelectTrigger className="w-20">
+                <SelectTrigger className="w-16 sm:w-20 flex-shrink-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -730,27 +730,30 @@ export default function Game() {
               <Button 
                 onClick={() => setShowSettings(true)} 
                 variant="outline" 
-                className="border-gray-300"
+                className="border-gray-300 flex-shrink-0"
+                size="sm"
               >
-                <Settings className="mr-2 h-4 w-4" />
-                {t('game.settings')}
+                <Settings className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('game.settings')}</span>
               </Button>
               {gameState.isPlaying && (
                 <Button 
                   onClick={handleGiveUp}
                   variant="outline"
-                  className="border-red-300 text-red-600 hover:bg-red-50"
+                  className="border-red-300 text-red-600 hover:bg-red-50 flex-shrink-0"
+                  size="sm"
                 >
-                  <Flag className="mr-2 h-4 w-4" />
-                  {t('game.giveUp')}
+                  <Flag className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('game.giveUp')}</span>
                 </Button>
               )}
               <Button 
                 onClick={() => initializeGame()} 
-                className="bg-indigo-500 hover:bg-indigo-600"
+                className="bg-indigo-500 hover:bg-indigo-600 flex-shrink-0"
+                size="sm"
               >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                {t('game.newGame')}
+                <RotateCcw className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('game.newGame')}</span>
               </Button>
             </div>
           </div>
@@ -831,7 +834,7 @@ export default function Game() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 lg:space-y-6 order-2 lg:order-2">
             {/* Target Numbers */}
             <Card className="shadow-lg">
               <CardContent className="p-6">

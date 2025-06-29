@@ -2,6 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile touch optimization */
+.game-board {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Improve touch targets on mobile */
+.game-cell {
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Увеличиваем минимальный размер для лучшего touch target */
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Prevent text selection on game elements */
+.game-container {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Better mobile viewport handling */
+@media (max-width: 768px) {
+  .game-cell {
+    min-width: 50px;
+    min-height: 50px;
+  }
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);

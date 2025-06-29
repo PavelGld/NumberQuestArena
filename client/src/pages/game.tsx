@@ -404,8 +404,8 @@ export default function Game() {
     return true;
   };
 
-  // Handle cell selection
-  const handleCellMouseDown = (row: number, col: number) => {
+  // Handle cell selection - both mouse and touch
+  const handleCellSelectionStart = (row: number, col: number) => {
     setIsSelecting(true);
     setSelectionStart({ row, col });
     setGameState(prev => ({
@@ -416,7 +416,16 @@ export default function Game() {
     }));
   };
 
-  const handleCellMouseEnter = (row: number, col: number) => {
+  const handleCellMouseDown = (row: number, col: number) => {
+    handleCellSelectionStart(row, col);
+  };
+
+  const handleCellTouchStart = (row: number, col: number, e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent scrolling on touch
+    handleCellSelectionStart(row, col);
+  };
+
+  const handleCellSelectionMove = (row: number, col: number) => {
     if (!isSelecting || !selectionStart) return;
 
     const newPath = [];
@@ -454,6 +463,26 @@ export default function Game() {
     }
 
     updateSelection(newPath);
+  };
+
+  const handleCellMouseEnter = (row: number, col: number) => {
+    handleCellSelectionMove(row, col);
+  };
+
+  const handleCellTouchMove = (e: React.TouchEvent) => {
+    if (!isSelecting) return;
+    
+    e.preventDefault(); // Prevent scrolling
+    
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    // Find the cell element
+    if (element && element.hasAttribute('data-row') && element.hasAttribute('data-col')) {
+      const row = parseInt(element.getAttribute('data-row') || '0');
+      const col = parseInt(element.getAttribute('data-col') || '0');
+      handleCellSelectionMove(row, col);
+    }
   };
 
   const updateSelection = (cells: { row: number; col: number }[]) => {
@@ -539,7 +568,7 @@ export default function Game() {
     }));
   };
 
-  const handleMouseUp = () => {
+  const handleSelectionEnd = () => {
     if (!isSelecting) return;
     
     setIsSelecting(false);
@@ -577,6 +606,15 @@ export default function Game() {
         currentResult: null,
       }));
     }, 500);
+  };
+
+  const handleMouseUp = () => {
+    handleSelectionEnd();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleSelectionEnd();
   };
 
   // Handle score submission
@@ -624,7 +662,7 @@ export default function Game() {
   const getCellClasses = (cell: Cell, row: number, col: number) => {
     const isSelected = isCellSelected(row, col);
     const isInSolution = isCellInSolution(row, col);
-    const baseClasses = "aspect-square border-2 rounded-lg flex items-center justify-center font-bold transition-all cursor-pointer select-none";
+    const baseClasses = "game-cell aspect-square border-2 rounded-lg flex items-center justify-center font-bold transition-all cursor-pointer select-none";
     
     // Adjust text size based on board size
     const textSize = gameState.boardSize === 5 ? "text-2xl" : gameState.boardSize === 10 ? "text-lg" : "text-sm";
@@ -725,12 +763,14 @@ export default function Game() {
                 </div>
 
                 <div 
-                  className={`grid gap-1 mx-auto bg-gray-100 p-4 rounded-xl max-w-fit`}
+                  className={`grid gap-1 mx-auto bg-gray-100 p-4 rounded-xl max-w-fit game-board`}
                   style={{
                     gridTemplateColumns: `repeat(${gameState.boardSize}, minmax(0, 1fr))`
                   }}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchMove={handleCellTouchMove}
                 >
                   {gameState.board.map((row, rowIndex) =>
                     row.map((cell, colIndex) => (
@@ -741,8 +781,11 @@ export default function Game() {
                           width: gameState.boardSize === 5 ? "60px" : gameState.boardSize === 10 ? "40px" : "30px",
                           height: gameState.boardSize === 5 ? "60px" : gameState.boardSize === 10 ? "40px" : "30px"
                         }}
+                        data-row={rowIndex}
+                        data-col={colIndex}
                         onMouseDown={() => handleCellMouseDown(rowIndex, colIndex)}
                         onMouseEnter={() => handleCellMouseEnter(rowIndex, colIndex)}
+                        onTouchStart={(e) => handleCellTouchStart(rowIndex, colIndex, e)}
                       >
                         {cell.value}
                       </div>

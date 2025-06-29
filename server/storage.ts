@@ -5,6 +5,11 @@ import { eq, and } from "drizzle-orm";
 /**
  * Интерфейс для работы с хранилищем данных
  * Определяет все методы для CRUD операций с пользователями и лидербордом
+ * 
+ * @interface IStorage
+ * @description Абстрактный интерфейс для работы с данными приложения
+ * @since 1.0.0
+ * @license Apache-2.0
  */
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -16,6 +21,12 @@ export interface IStorage {
 
 /**
  * Реализация хранилища данных с использованием PostgreSQL через Drizzle ORM
+ * 
+ * @class DatabaseStorage
+ * @implements {IStorage}
+ * @description Конкретная реализация интерфейса IStorage для работы с PostgreSQL
+ * @since 1.0.0
+ * @license Apache-2.0
  */
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {

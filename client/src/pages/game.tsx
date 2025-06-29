@@ -473,15 +473,24 @@ export default function Game() {
     if (!isSelecting) return;
     
     e.preventDefault(); // Prevent scrolling
+    e.stopPropagation();
     
     const touch = e.touches[0];
+    if (!touch) return;
+    
+    // Get element at touch position
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     
-    // Find the cell element
-    if (element && element.hasAttribute('data-row') && element.hasAttribute('data-col')) {
-      const row = parseInt(element.getAttribute('data-row') || '0');
-      const col = parseInt(element.getAttribute('data-col') || '0');
-      handleCellSelectionMove(row, col);
+    // Find the cell element or its parent with data attributes
+    let cellElement = element;
+    while (cellElement && cellElement !== document.body) {
+      if (cellElement.hasAttribute && cellElement.hasAttribute('data-row') && cellElement.hasAttribute('data-col')) {
+        const row = parseInt(cellElement.getAttribute('data-row') || '0');
+        const col = parseInt(cellElement.getAttribute('data-col') || '0');
+        handleCellSelectionMove(row, col);
+        break;
+      }
+      cellElement = cellElement.parentElement;
     }
   };
 
@@ -750,7 +759,7 @@ export default function Game() {
 
       {/* Main Game Area */}
       <main className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 game-container">
           {/* Game Board */}
           <div className="lg:col-span-3">
             <Card className="shadow-lg">

@@ -1135,7 +1135,7 @@ export default function Game() {
                             {entry.nickname}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {entry.attempts} {t('leaderboard.attempts')}
+                            {t('leaderboard.attempts')}: {entry.attempts}
                           </div>
                         </div>
                       </div>

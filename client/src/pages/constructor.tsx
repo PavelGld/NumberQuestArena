@@ -60,6 +60,7 @@ export default function Constructor() {
   const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
+  const [isBoardDirty, setIsBoardDirty] = useState(false);
 
   const createEmptyBoard = useCallback((size: BoardSize): Cell[][] => {
     const newBoard: Cell[][] = [];
@@ -88,6 +89,7 @@ export default function Constructor() {
       currentResult: null,
       attemptCount: 0,
     });
+    setIsBoardDirty(false);
   }, [boardSize, createEmptyBoard]);
 
   const handleCellClick = (row: number, col: number) => {
@@ -118,6 +120,19 @@ export default function Constructor() {
     
     setBoard(newBoard);
     setEditingCell(null);
+    
+    if (testState.foundTargets.size > 0) {
+      setIsBoardDirty(true);
+      setTestState(prev => ({
+        ...prev,
+        foundTargets: new Set(),
+      }));
+      toast({
+        title: "Поле изменено",
+        description: "Решите головоломку заново перед сохранением",
+        variant: "destructive",
+      });
+    }
   };
 
   const evaluateExpression = (expression: (number | Operation)[]): number | null => {
@@ -268,6 +283,7 @@ export default function Constructor() {
         });
 
         if (newFoundTargets.size === targets.length) {
+          setIsBoardDirty(false);
           toast({
             title: "Поздравляем!",
             description: "Вы решили головоломку! Теперь можете её сохранить.",
@@ -387,9 +403,11 @@ export default function Constructor() {
     }));
 
     if (result !== null && targets.includes(result) && !testState.foundTargets.has(result)) {
+      const newFoundTargets = new Set([...Array.from(testState.foundTargets), result]);
+      
       setTestState(prev => ({
         ...prev,
-        foundTargets: new Set([...Array.from(prev.foundTargets), result]),
+        foundTargets: newFoundTargets,
         attemptCount: prev.attemptCount + 1,
       }));
       
@@ -398,7 +416,8 @@ export default function Constructor() {
         description: `Вы нашли ${result}`,
       });
 
-      if (testState.foundTargets.size + 1 === targets.length) {
+      if (newFoundTargets.size === targets.length) {
+        setIsBoardDirty(false);
         toast({
           title: "Поздравляем!",
           description: "Вы решили головоломку! Теперь можете её сохранить.",
@@ -425,6 +444,14 @@ export default function Constructor() {
     );
     
     setBoard(newBoard);
+    
+    if (testState.foundTargets.size > 0) {
+      setIsBoardDirty(true);
+      setTestState(prev => ({
+        ...prev,
+        foundTargets: new Set(),
+      }));
+    }
 
     if (targets.length === 0) {
       const generatedTargets: number[] = [];
@@ -489,7 +516,9 @@ export default function Constructor() {
 
     toast({
       title: "Автозаполнение",
-      description: "Пустые клетки заполнены случайными значениями",
+      description: testState.foundTargets.size > 0 
+        ? "Пустые клетки заполнены. Решите головоломку заново перед сохранением"
+        : "Пустые клетки заполнены случайными значениями",
     });
   };
 
@@ -498,11 +527,55 @@ export default function Constructor() {
     if (!isNaN(num) && !targets.includes(num)) {
       setTargets([...targets, num]);
       setTargetInput("");
+      
+      if (testState.foundTargets.size > 0) {
+        setIsBoardDirty(true);
+        setTestState(prev => ({
+          ...prev,
+          foundTargets: new Set(),
+        }));
+        toast({
+          title: "Цели изменены",
+          description: "Решите головоломку заново перед сохранением",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleRemoveTarget = (target: number) => {
     setTargets(targets.filter(t => t !== target));
+    
+    if (testState.foundTargets.size > 0) {
+      setIsBoardDirty(true);
+      setTestState(prev => ({
+        ...prev,
+        foundTargets: new Set(),
+      }));
+      toast({
+        title: "Цели изменены",
+        description: "Решите головоломку заново перед сохранением",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleTestMode = () => {
+    if (isTestMode) {
+      if (testState.foundTargets.size > 0 && testState.foundTargets.size < targets.length) {
+        setIsBoardDirty(true);
+        setTestState(prev => ({
+          ...prev,
+          foundTargets: new Set(),
+        }));
+        toast({
+          title: "Тестирование прервано",
+          description: "Решите головоломку заново перед сохранением",
+          variant: "destructive",
+        });
+      }
+    }
+    setIsTestMode(!isTestMode);
   };
 
   const validateBoard = (): boolean => {
@@ -546,7 +619,7 @@ export default function Constructor() {
       }
     }
 
-    if (testState.foundTargets.size !== targets.length) {
+    if (testState.foundTargets.size !== targets.length || isBoardDirty) {
       toast({
         title: "Ошибка",
         description: "Вы должны решить головоломку перед сохранением",
@@ -569,6 +642,7 @@ export default function Constructor() {
       });
       setBoardName("");
       setCreatorName("");
+      setIsBoardDirty(false);
       initializeBoard();
     },
     onError: () => {
@@ -692,7 +766,7 @@ export default function Constructor() {
 
                 <div className="flex gap-2 justify-center flex-wrap">
                   <Button
-                    onClick={() => setIsTestMode(!isTestMode)}
+                    onClick={handleToggleTestMode}
                     variant={isTestMode ? "destructive" : "default"}
                     data-testid="button-toggle-test-mode"
                   >
@@ -889,6 +963,19 @@ export default function Constructor() {
                       value: null,
                     };
                     setBoard(newBoard);
+                    
+                    if (testState.foundTargets.size > 0) {
+                      setIsBoardDirty(true);
+                      setTestState(prev => ({
+                        ...prev,
+                        foundTargets: new Set(),
+                      }));
+                      toast({
+                        title: "Поле изменено",
+                        description: "Решите головоломку заново перед сохранением",
+                        variant: "destructive",
+                      });
+                    }
                   }
                 }}
               >

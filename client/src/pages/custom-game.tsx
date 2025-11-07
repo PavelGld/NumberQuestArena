@@ -412,6 +412,24 @@ export default function CustomGame() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const getDifficultyBadge = (difficulty: string) => {
+    const variants: Record<string, string> = {
+      easy: "bg-green-100 text-green-800",
+      medium: "bg-yellow-100 text-yellow-800",
+      hard: "bg-red-100 text-red-800",
+    };
+    const labels: Record<string, string> = {
+      easy: "Легко",
+      medium: "Средне",
+      hard: "Сложно",
+    };
+    return (
+      <Badge className={variants[difficulty] || ""}>
+        {labels[difficulty] || difficulty}
+      </Badge>
+    );
+  };
+
   const getCellClasses = (cell: Cell, row: number, col: number) => {
     const isSelected = gameState.selectedCells.some(c => c.row === row && c.col === col);
     const baseClasses = "w-12 h-12 md:w-16 md:h-16 flex items-center justify-center font-bold text-lg rounded-lg transition-all cursor-pointer border-2 select-none";
@@ -458,8 +476,11 @@ export default function CustomGame() {
             <h1 className="text-3xl md:text-4xl font-bold text-indigo-900 flex items-center gap-2">
               <Calculator className="w-8 h-8" />
               {customBoard.name}
+              {getDifficultyBadge(customBoard.difficulty)}
             </h1>
-            <p className="text-gray-600 mt-1">Автор: {customBoard.creatorName}</p>
+            <p className="text-gray-600 mt-1">
+              Автор: {customBoard.creatorName} • Размер: {customBoard.boardSize}×{customBoard.boardSize}
+            </p>
           </div>
           <div className="flex gap-2">
             <Link href="/custom-boards">

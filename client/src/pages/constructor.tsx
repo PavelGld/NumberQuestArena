@@ -834,7 +834,7 @@ export default function Constructor() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Сложность</label>
+                  <label className="text-sm font-medium mb-2 block">Сложность (по вашему мнению)</label>
                   <Select
                     value={difficulty}
                     onValueChange={(value: Difficulty) => setDifficulty(value)}
@@ -844,9 +844,9 @@ export default function Constructor() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="easy">Легко (+, -, *)</SelectItem>
-                      <SelectItem value="medium">Средне (+, -, *, /)</SelectItem>
-                      <SelectItem value="hard">Сложно (+, -, *, /, ^)</SelectItem>
+                      <SelectItem value="easy">Легко</SelectItem>
+                      <SelectItem value="medium">Средне</SelectItem>
+                      <SelectItem value="hard">Сложно</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

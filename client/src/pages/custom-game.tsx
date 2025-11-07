@@ -68,6 +68,7 @@ export default function CustomGame() {
   const [playerNickname, setPlayerNickname] = useState("");
   const isDraggingRef = useRef(false);
   const selectionStartRef = useRef<{ row: number; col: number } | null>(null);
+  const lastFoundTargetRef = useRef<number | null>(null);
 
   const { data: leaderboard = [] } = useQuery<CustomBoardLeaderboard[]>({
     queryKey: [`/api/custom-boards/${boardId}/leaderboard`],
@@ -129,6 +130,20 @@ export default function CustomGame() {
       setShowVictoryModal(true);
     }
   }, [gameState.foundTargets.size, targets.length, gameState.isPlaying]);
+
+  useEffect(() => {
+    const foundTargetsArray = Array.from(gameState.foundTargets);
+    if (foundTargetsArray.length > 0) {
+      const lastFound = foundTargetsArray[foundTargetsArray.length - 1];
+      if (lastFound !== lastFoundTargetRef.current) {
+        lastFoundTargetRef.current = lastFound;
+        toast({
+          title: "Цель найдена!",
+          description: `Вы нашли ${lastFound}`,
+        });
+      }
+    }
+  }, [gameState.foundTargets, toast]);
 
   const evaluateExpression = (expression: (number | Operation)[]): number | null => {
     if (expression.length < 1) return null;
@@ -249,15 +264,9 @@ export default function CustomGame() {
       };
     });
     
-    // Проверка найденных целей вне setGameState чтобы избежать вложенных обновлений
     setGameState(prev => {
       const result = prev.currentResult;
       if (result !== null && targets.includes(result) && !prev.foundTargets.has(result)) {
-        toast({
-          title: "Цель найдена!",
-          description: `Вы нашли ${result}`,
-        });
-        
         return {
           ...prev,
           foundTargets: new Set([...Array.from(prev.foundTargets), result]),
@@ -369,15 +378,11 @@ export default function CustomGame() {
         ...prev,
         foundTargets: new Set([...Array.from(prev.foundTargets), result]),
       }));
-
-      toast({
-        title: "Цель найдена!",
-        description: `Вы нашли ${result}`,
-      });
     }
   };
 
   const handleRestart = () => {
+    lastFoundTargetRef.current = null;
     setGameState({
       selectedCells: [],
       foundTargets: new Set(),

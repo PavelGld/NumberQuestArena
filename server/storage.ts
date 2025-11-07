@@ -139,7 +139,7 @@ export class DatabaseStorage implements IStorage {
     const boards = await db
       .select()
       .from(customBoards)
-      .where(and(eq(customBoards.isSolved, true)))
+      .where(eq(customBoards.isSolved, true))
       .orderBy(desc(customBoards.completionCount))
       .limit(100);
     

@@ -62,7 +62,7 @@ This is a multilingual mathematical puzzle game built with React and Express. Pl
 -- Users table for future authentication
 users (id, username, password)
 
--- Leaderboard entries
+-- Leaderboard entries for standard game
 leaderboard_entries (
   id, nickname, time, attempts, 
   difficulty, board_size, completed_at
@@ -71,7 +71,14 @@ leaderboard_entries (
 -- Custom boards created by players
 custom_boards (
   id, name, creator_name, difficulty, board_size,
-  board_data (jsonb), targets (array), is_solved, created_at
+  board_data (jsonb), targets (array), is_solved, 
+  completion_count, created_at
+)
+
+-- Leaderboard entries for custom boards
+custom_board_leaderboards (
+  id, custom_board_id, nickname, time, 
+  attempts, completed_at
 )
 ```
 
@@ -147,6 +154,11 @@ This project is licensed under the Apache License 2.0. All source files include 
 - November 7, 2025: Fixed critical bug where first cell was ignored during subsequent drag selections
 - November 7, 2025: Rewrote drag selection logic to directly initialize selection on mouseDown
 - November 7, 2025: Fixed conflict between click and drag handlers by removing onClick
+- November 7, 2025: Added custom_board_leaderboards table for tracking scores on custom boards
+- November 7, 2025: Implemented completion_count tracking for custom boards
+- November 7, 2025: Added top-100 popular boards feature with dedicated leaderboards
+- November 7, 2025: Fixed horizontal scroll issue on main page header
+- November 7, 2025: Fixed React toast warnings by using useEffect for notifications
 
 ## User Preferences
 

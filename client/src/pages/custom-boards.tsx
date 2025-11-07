@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Puzzle, Home, User, Target, Calendar } from "lucide-react";
+import { Puzzle, Home, User, Target, Calendar, TrendingUp } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { CustomBoard } from "@shared/schema";
 
@@ -15,15 +15,18 @@ export default function CustomBoards() {
   const [, setLocation] = useLocation();
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
   const [filterBoardSize, setFilterBoardSize] = useState<string>("all");
+  const [showTop100, setShowTop100] = useState(false);
 
   const { data: boards = [], isLoading } = useQuery<CustomBoard[]>({
-    queryKey: [
-      "/api/custom-boards",
-      {
-        difficulty: filterDifficulty !== "all" ? filterDifficulty : undefined,
-        boardSize: filterBoardSize !== "all" ? parseInt(filterBoardSize) : undefined,
-      },
-    ],
+    queryKey: showTop100 
+      ? ["/api/custom-boards/top"]
+      : [
+          "/api/custom-boards",
+          {
+            difficulty: filterDifficulty !== "all" ? filterDifficulty : undefined,
+            boardSize: filterBoardSize !== "all" ? parseInt(filterBoardSize) : undefined,
+          },
+        ],
   });
 
   const getDifficultyBadge = (difficulty: string) => {
@@ -78,36 +81,55 @@ export default function CustomBoards() {
             <CardTitle>Фильтры</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Сложность</label>
-                <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-                  <SelectTrigger data-testid="select-filter-difficulty">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Все</SelectItem>
-                    <SelectItem value="easy">Легко</SelectItem>
-                    <SelectItem value="medium">Средне</SelectItem>
-                    <SelectItem value="hard">Сложно</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="top100"
+                  checked={showTop100}
+                  onChange={(e) => setShowTop100(e.target.checked)}
+                  className="rounded border-gray-300"
+                  data-testid="checkbox-top100"
+                />
+                <label htmlFor="top100" className="text-sm font-medium flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  Показать только топ-100 популярных
+                </label>
               </div>
+              
+              {!showTop100 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Сложность</label>
+                    <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
+                      <SelectTrigger data-testid="select-filter-difficulty">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все</SelectItem>
+                        <SelectItem value="easy">Легко</SelectItem>
+                        <SelectItem value="medium">Средне</SelectItem>
+                        <SelectItem value="hard">Сложно</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Размер поля</label>
-                <Select value={filterBoardSize} onValueChange={setFilterBoardSize}>
-                  <SelectTrigger data-testid="select-filter-board-size">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Все</SelectItem>
-                    <SelectItem value="5">5×5</SelectItem>
-                    <SelectItem value="10">10×10</SelectItem>
-                    <SelectItem value="15">15×15</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Размер поля</label>
+                    <Select value={filterBoardSize} onValueChange={setFilterBoardSize}>
+                      <SelectTrigger data-testid="select-filter-board-size">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все</SelectItem>
+                        <SelectItem value="5">5×5</SelectItem>
+                        <SelectItem value="10">10×10</SelectItem>
+                        <SelectItem value="15">15×15</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -162,6 +184,10 @@ export default function CustomBoards() {
                     <div className="flex items-center gap-2 text-gray-600">
                       <Target className="w-4 h-4" />
                       <span>Целей: {board.targets.length}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <TrendingUp className="w-4 h-4" />
+                      <span>Решений: {board.completionCount}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Calendar className="w-4 h-4" />

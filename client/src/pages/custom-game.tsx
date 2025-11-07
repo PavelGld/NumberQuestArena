@@ -20,7 +20,7 @@ import {
   Home,
   ArrowLeft
 } from "lucide-react";
-import type { CustomBoard, LeaderboardEntry, InsertLeaderboardEntry } from "@shared/schema";
+import type { CustomBoard, CustomBoardLeaderboard, InsertCustomBoardLeaderboard } from "@shared/schema";
 
 type CellType = "number" | "operation";
 type Operation = "+" | "-" | "*" | "/" | "^";
@@ -69,15 +69,16 @@ export default function CustomGame() {
   const isDraggingRef = useRef(false);
   const selectionStartRef = useRef<{ row: number; col: number } | null>(null);
 
-  const { data: leaderboard = [] } = useQuery<LeaderboardEntry[]>({
-    queryKey: ["/api/leaderboard", customBoard?.difficulty, customBoard?.boardSize],
+  const { data: leaderboard = [] } = useQuery<CustomBoardLeaderboard[]>({
+    queryKey: [`/api/custom-boards/${boardId}/leaderboard`],
+    enabled: !!boardId,
   });
 
   const submitScoreMutation = useMutation({
-    mutationFn: (data: InsertLeaderboardEntry) =>
-      apiRequest("POST", "/api/leaderboard", data),
+    mutationFn: (data: InsertCustomBoardLeaderboard) =>
+      apiRequest("POST", `/api/custom-boards/${boardId}/leaderboard`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/custom-boards/${boardId}/leaderboard`] });
       setShowVictoryModal(false);
       setShowLeaderboard(true);
       toast({
@@ -393,11 +394,10 @@ export default function CustomGame() {
     if (!playerNickname.trim() || !customBoard) return;
 
     submitScoreMutation.mutate({
+      customBoardId: customBoard.id,
       nickname: playerNickname,
       time: gameState.gameTime,
       attempts: gameState.attemptCount,
-      difficulty: customBoard.difficulty,
-      boardSize: customBoard.boardSize,
     });
   };
 

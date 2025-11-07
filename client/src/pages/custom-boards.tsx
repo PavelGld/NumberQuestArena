@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Puzzle, Home, User, Target, Calendar, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Puzzle, Home, User, Target, Calendar, TrendingUp, Search } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { CustomBoard } from "@shared/schema";
 
@@ -16,6 +17,7 @@ export default function CustomBoards() {
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
   const [filterBoardSize, setFilterBoardSize] = useState<string>("all");
   const [showTop100, setShowTop100] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { data: boards = [], isLoading } = useQuery<CustomBoard[]>({
     queryKey: showTop100 
@@ -60,6 +62,15 @@ export default function CustomBoards() {
     setLocation(`/game/custom/${boardId}`);
   };
 
+  const filteredBoards = boards.filter((board) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      board.name.toLowerCase().includes(query) ||
+      board.creatorName.toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
       <div className="max-w-6xl mx-auto">
@@ -82,6 +93,21 @@ export default function CustomBoards() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  Поиск по названию или автору
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Введите название поля или имя автора..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  data-testid="input-search"
+                  className="w-full"
+                />
+              </div>
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -138,26 +164,31 @@ export default function CustomBoards() {
           <div className="text-center py-12">
             <div className="text-gray-600">Загрузка...</div>
           </div>
-        ) : boards.length === 0 ? (
+        ) : filteredBoards.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Puzzle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                Нет доступных полей
+                {searchQuery ? "Ничего не найдено" : "Нет доступных полей"}
               </h3>
               <p className="text-gray-500 mb-4">
-                Создайте своё первое поле в конструкторе!
+                {searchQuery 
+                  ? "Попробуйте изменить параметры поиска"
+                  : "Создайте своё первое поле в конструкторе!"
+                }
               </p>
-              <Link href="/constructor">
-                <Button data-testid="button-create-board">
-                  Создать поле
-                </Button>
-              </Link>
+              {!searchQuery && (
+                <Link href="/constructor">
+                  <Button data-testid="button-create-board">
+                    Создать поле
+                  </Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {boards.map((board) => (
+            {filteredBoards.map((board) => (
               <Card
                 key={board.id}
                 className="hover:shadow-lg transition-shadow"

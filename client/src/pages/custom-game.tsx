@@ -67,6 +67,7 @@ export default function CustomGame() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [playerNickname, setPlayerNickname] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
 
   const { data: leaderboard = [] } = useQuery<LeaderboardEntry[]>({
     queryKey: ["/api/leaderboard", customBoard?.difficulty, customBoard?.boardSize],
@@ -168,19 +169,21 @@ export default function CustomGame() {
 
   const handleCellSelectionStart = (row: number, col: number) => {
     setIsDragging(true);
-    handleCellClick(row, col);
+    setSelectionStart({ row, col });
+    handleCellClick(row, col, false);
   };
 
   const handleCellSelectionMove = (row: number, col: number) => {
     if (!isDragging) return;
-    handleCellClick(row, col);
+    handleCellClick(row, col, true);
   };
 
   const handleSelectionEnd = () => {
     setIsDragging(false);
+    setSelectionStart(null);
   };
 
-  const handleCellClick = (row: number, col: number) => {
+  const handleCellClick = (row: number, col: number, isDragMode = false) => {
     if (!gameState.isPlaying) return;
 
     const clickedCell = board[row][col];
@@ -188,6 +191,9 @@ export default function CustomGame() {
     const isAlreadySelected = selectedCells.some(c => c.row === row && c.col === col);
 
     if (isAlreadySelected) {
+      if (isDragMode) {
+        return;
+      }
       setGameState(prev => ({
         ...prev,
         selectedCells: [],
@@ -398,7 +404,6 @@ export default function CustomGame() {
                         <div
                           key={`${rowIndex}-${colIndex}`}
                           className={getCellClasses(cell, rowIndex, colIndex)}
-                          onClick={() => handleCellClick(rowIndex, colIndex)}
                           onMouseDown={() => handleCellSelectionStart(rowIndex, colIndex)}
                           onMouseEnter={() => handleCellSelectionMove(rowIndex, colIndex)}
                           data-testid={`cell-${rowIndex}-${colIndex}`}

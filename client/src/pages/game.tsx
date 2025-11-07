@@ -737,14 +737,14 @@ export default function Game() {
                 </Button>
               </Link>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto overflow-x-auto">
-              <div className="bg-gray-100 px-2 sm:px-4 py-1 sm:py-2 rounded-lg flex-shrink-0">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <div className="bg-gray-100 px-2 sm:px-4 py-1 sm:py-2 rounded-lg">
                 <span className="font-mono text-sm sm:text-lg font-semibold text-gray-900">
                   {formatTime(gameState.gameTime)}
                 </span>
               </div>
               <Select value={language} onValueChange={(value: Language) => setLanguage(value)}>
-                <SelectTrigger className="w-16 sm:w-20 flex-shrink-0">
+                <SelectTrigger className="w-16 sm:w-20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -755,7 +755,7 @@ export default function Game() {
               <Button 
                 onClick={() => setShowSettings(true)} 
                 variant="outline" 
-                className="border-gray-300 flex-shrink-0"
+                className="border-gray-300"
                 size="sm"
               >
                 <Settings className="h-4 w-4 sm:mr-2" />
@@ -765,7 +765,7 @@ export default function Game() {
                 <Button 
                   onClick={handleGiveUp}
                   variant="outline"
-                  className="border-red-300 text-red-600 hover:bg-red-50 flex-shrink-0"
+                  className="border-red-300 text-red-600 hover:bg-red-50"
                   size="sm"
                 >
                   <Flag className="h-4 w-4 sm:mr-2" />
@@ -774,7 +774,7 @@ export default function Game() {
               )}
               <Button 
                 onClick={() => initializeGame()} 
-                className="bg-indigo-500 hover:bg-indigo-600 flex-shrink-0"
+                className="bg-indigo-500 hover:bg-indigo-600"
                 size="sm"
               >
                 <RotateCcw className="h-4 w-4 sm:mr-2" />

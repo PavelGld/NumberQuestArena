@@ -159,6 +159,7 @@ This project is licensed under the Apache License 2.0. All source files include 
 - November 7, 2025: Added top-100 popular boards feature with dedicated leaderboards
 - November 7, 2025: Fixed horizontal scroll issue on main page header
 - November 7, 2025: Fixed React toast warnings by using useEffect for notifications
+- November 7, 2025: Fixed route ordering issue - moved /api/custom-boards/top before /:id route to prevent "top" being parsed as ID parameter
 
 ## User Preferences
 

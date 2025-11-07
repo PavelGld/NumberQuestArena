@@ -36,9 +36,12 @@ This is a multilingual mathematical puzzle game built with React and Express. Pl
 - **Grid System**: Dynamic grid generation with alternating numbers and operations
 - **Path Selection**: Continuous line selection (horizontal/vertical) with visual feedback
 - **Expression Evaluation**: Real-time mathematical expression parsing and calculation
+- **Number Concatenation**: Adjacent number cells can be selected without operations, concatenating to form larger numbers (e.g., 1-2 becomes 12)
 - **Difficulty Levels**: Three levels (easy, medium, hard) with different operation sets
 - **Board Sizes**: Configurable grid sizes (5x5, 10x10, 15x15)
 - **Solution Detection**: Automatic solution finding for hint system
+- **Custom Board Constructor**: Players can create and share their own puzzle boards
+- **Board Validation**: Creators must solve their own puzzles before publishing
 
 ### User Interface
 - **Responsive Design**: Mobile-first approach with touch-optimized controls
@@ -47,6 +50,9 @@ This is a multilingual mathematical puzzle game built with React and Express. Pl
 - **Statistics Panel**: Real-time game statistics and progress tracking
 - **Leaderboard**: Filterable rankings by difficulty and board size
 - **Settings Dialog**: Game configuration and language switching
+- **Board Constructor**: Visual editor for creating custom puzzle boards
+- **Custom Board Browser**: Gallery of player-created boards with filtering
+- **Multi-Mode Navigation**: Seamless switching between standard game, constructor, and custom boards
 
 ### Database Schema
 ```sql
@@ -57,6 +63,12 @@ users (id, username, password)
 leaderboard_entries (
   id, nickname, time, attempts, 
   difficulty, board_size, completed_at
+)
+
+-- Custom boards created by players
+custom_boards (
+  id, name, creator_name, difficulty, board_size,
+  board_data (jsonb), targets (array), is_solved, created_at
 )
 ```
 
@@ -120,6 +132,10 @@ This project is licensed under the Apache License 2.0. All source files include 
 - June 29, 2025: Implemented responsive design for all UI components  
 - June 29, 2025: Updated copyright year to 2025
 - June 29, 2025: Added Apache-2.0 license with proper documentation
+- November 7, 2025: Added custom board constructor with concatenation feature
+- November 7, 2025: Implemented player-created board gallery with filtering
+- November 7, 2025: Added validation requiring creators to solve puzzles before publishing
+- November 7, 2025: Enhanced number concatenation logic for adjacent cells
 
 ## User Preferences
 

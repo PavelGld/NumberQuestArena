@@ -38,6 +38,17 @@ export const getQueryFn: <T>(options: {
       url = `/api/leaderboard?difficulty=${difficulty}&boardSize=${boardSize}`;
     }
     
+    // Handle custom-boards queries with filtering parameters
+    if (url === "/api/custom-boards" && queryKey.length > 1) {
+      const params = queryKey[1] as { difficulty?: string; boardSize?: number };
+      const queryParams = new URLSearchParams();
+      if (params.difficulty) queryParams.append("difficulty", params.difficulty);
+      if (params.boardSize !== undefined) queryParams.append("boardSize", params.boardSize.toString());
+      if (queryParams.toString()) {
+        url = `/api/custom-boards?${queryParams.toString()}`;
+      }
+    }
+    
     const res = await fetch(url, {
       credentials: "include",
     });

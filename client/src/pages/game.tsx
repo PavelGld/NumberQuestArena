@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLanguage, type Language } from "@/lib/i18n";
-import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings, Flag, Languages } from "lucide-react";
+import { Calculator, Trophy, RotateCcw, Target, BarChart3, Info, CheckCircle, Circle, Settings, Flag, Languages, Pencil, Puzzle } from "lucide-react";
+import { Link } from "wouter";
 import type { LeaderboardEntry, InsertLeaderboardEntry } from "@shared/schema";
 
 // Типы для игровой логики
@@ -711,6 +712,30 @@ export default function Game() {
                   {t(`difficulty.${gameState.difficulty}`)} • {t(`boardSize.${gameState.boardSize}`)}
                 </div>
               </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <Link href="/constructor">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex-shrink-0"
+                  data-testid="button-constructor"
+                >
+                  <Pencil className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Конструктор</span>
+                </Button>
+              </Link>
+              <Link href="/custom-boards">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="flex-shrink-0"
+                  data-testid="button-custom-boards"
+                >
+                  <Puzzle className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Пользовательские</span>
+                </Button>
+              </Link>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto overflow-x-auto">
               <div className="bg-gray-100 px-2 sm:px-4 py-1 sm:py-2 rounded-lg flex-shrink-0">

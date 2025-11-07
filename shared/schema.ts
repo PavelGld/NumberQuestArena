@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -18,6 +18,18 @@ export const leaderboardEntries = pgTable("leaderboard_entries", {
   completedAt: timestamp("completed_at").defaultNow().notNull(),
 });
 
+export const customBoards = pgTable("custom_boards", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  creatorName: text("creator_name").notNull(),
+  difficulty: text("difficulty").notNull(), // "easy", "medium", "hard"
+  boardSize: integer("board_size").notNull(), // 5, 10, 15
+  boardData: jsonb("board_data").notNull(), // 2D array of cells
+  targets: integer("targets").array().notNull(), // target numbers
+  isSolved: boolean("is_solved").notNull().default(false), // has creator solved it?
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -31,7 +43,14 @@ export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntrie
   boardSize: true,
 });
 
+export const insertCustomBoardSchema = createInsertSchema(customBoards).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertLeaderboardEntry = z.infer<typeof insertLeaderboardEntrySchema>;
 export type LeaderboardEntry = typeof leaderboardEntries.$inferSelect;
+export type InsertCustomBoard = z.infer<typeof insertCustomBoardSchema>;
+export type CustomBoard = typeof customBoards.$inferSelect;

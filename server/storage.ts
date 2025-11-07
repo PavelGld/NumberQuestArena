@@ -1,6 +1,16 @@
-import { users, leaderboardEntries, type User, type InsertUser, type LeaderboardEntry, type InsertLeaderboardEntry } from "@shared/schema";
+import { 
+  users, 
+  leaderboardEntries, 
+  customBoards,
+  type User, 
+  type InsertUser, 
+  type LeaderboardEntry, 
+  type InsertLeaderboardEntry,
+  type CustomBoard,
+  type InsertCustomBoard
+} from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 /**
  * Интерфейс для работы с хранилищем данных
@@ -17,6 +27,10 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   createLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
   getLeaderboard(difficulty?: string, boardSize?: number): Promise<LeaderboardEntry[]>;
+  createCustomBoard(board: InsertCustomBoard): Promise<CustomBoard>;
+  getCustomBoards(difficulty?: string, boardSize?: number): Promise<CustomBoard[]>;
+  getCustomBoard(id: number): Promise<CustomBoard | undefined>;
+  updateCustomBoardSolved(id: number): Promise<CustomBoard>;
 }
 
 /**
@@ -56,8 +70,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLeaderboard(difficulty?: string, boardSize?: number): Promise<LeaderboardEntry[]> {
-    let query = db.select().from(leaderboardEntries);
-    
     const conditions = [];
     if (difficulty) {
       conditions.push(eq(leaderboardEntries.difficulty, difficulty));
@@ -66,13 +78,54 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(leaderboardEntries.boardSize, boardSize));
     }
     
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+    const entries = conditions.length > 0
+      ? await db.select().from(leaderboardEntries).where(and(...conditions)).orderBy(leaderboardEntries.time).limit(10)
+      : await db.select().from(leaderboardEntries).orderBy(leaderboardEntries.time).limit(10);
+    
+    return entries;
+  }
+
+  async createCustomBoard(insertBoard: InsertCustomBoard): Promise<CustomBoard> {
+    const [board] = await db
+      .insert(customBoards)
+      .values(insertBoard)
+      .returning();
+    return board;
+  }
+
+  async getCustomBoards(difficulty?: string, boardSize?: number): Promise<CustomBoard[]> {
+    const conditions = [];
+    
+    conditions.push(eq(customBoards.isSolved, true));
+    
+    if (difficulty) {
+      conditions.push(eq(customBoards.difficulty, difficulty));
+    }
+    if (boardSize !== undefined) {
+      conditions.push(eq(customBoards.boardSize, boardSize));
     }
     
-    // Sort by time (ascending - faster is better) and limit to top 10
-    const entries = await query.orderBy(leaderboardEntries.time).limit(10);
-    return entries;
+    const boards = await db
+      .select()
+      .from(customBoards)
+      .where(and(...conditions))
+      .orderBy(desc(customBoards.createdAt));
+    
+    return boards;
+  }
+
+  async getCustomBoard(id: number): Promise<CustomBoard | undefined> {
+    const [board] = await db.select().from(customBoards).where(eq(customBoards.id, id));
+    return board || undefined;
+  }
+
+  async updateCustomBoardSolved(id: number): Promise<CustomBoard> {
+    const [board] = await db
+      .update(customBoards)
+      .set({ isSolved: true })
+      .where(eq(customBoards.id, id))
+      .returning();
+    return board;
   }
 }
 

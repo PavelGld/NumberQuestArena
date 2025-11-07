@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertLeaderboardEntrySchema } from "@shared/schema";
+import { insertLeaderboardEntrySchema, insertCustomBoardSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -31,6 +31,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Failed to save score" });
       }
+    }
+  });
+
+  // Get custom boards
+  app.get("/api/custom-boards", async (req, res) => {
+    try {
+      const { difficulty, boardSize } = req.query;
+      const boards = await storage.getCustomBoards(
+        difficulty as string,
+        boardSize ? parseInt(boardSize as string) : undefined
+      );
+      res.json(boards);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch custom boards" });
+    }
+  });
+
+  // Get single custom board
+  app.get("/api/custom-boards/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const board = await storage.getCustomBoard(id);
+      if (!board) {
+        res.status(404).json({ message: "Board not found" });
+        return;
+      }
+      res.json(board);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch custom board" });
+    }
+  });
+
+  // Create custom board
+  app.post("/api/custom-boards", async (req, res) => {
+    try {
+      const validatedData = insertCustomBoardSchema.parse(req.body);
+      const board = await storage.createCustomBoard(validatedData);
+      res.json(board);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create custom board" });
+      }
+    }
+  });
+
+  // Mark custom board as solved
+  app.patch("/api/custom-boards/:id/solved", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const board = await storage.updateCustomBoardSolved(id);
+      res.json(board);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update custom board" });
     }
   });
 

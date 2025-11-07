@@ -48,6 +48,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get top 100 popular custom boards (MUST be before /:id route)
+  app.get("/api/custom-boards/top", async (req, res) => {
+    try {
+      const boards = await storage.getTop100PopularBoards();
+      res.json(boards);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch top boards" });
+    }
+  });
+
   // Get single custom board
   app.get("/api/custom-boards/:id", async (req, res) => {
     try {
@@ -86,16 +96,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(board);
     } catch (error) {
       res.status(500).json({ message: "Failed to update custom board" });
-    }
-  });
-
-  // Get top 100 popular custom boards
-  app.get("/api/custom-boards/top", async (req, res) => {
-    try {
-      const boards = await storage.getTop100PopularBoards();
-      res.json(boards);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch top boards" });
     }
   });
 

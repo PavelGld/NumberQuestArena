@@ -58,16 +58,17 @@ export default function Constructor() {
     attemptCount: 0,
   });
   const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
 
   const createEmptyBoard = useCallback((size: BoardSize): Cell[][] => {
     const newBoard: Cell[][] = [];
     for (let row = 0; row < size; row++) {
       newBoard[row] = [];
       for (let col = 0; col < size; col++) {
-        const isNumberCell = (row + col) % 2 === 0;
         newBoard[row][col] = {
           value: null,
-          type: isNumberCell ? "number" : "operation",
+          type: "number",
           row,
           col,
         };
@@ -155,6 +156,134 @@ export default function Constructor() {
     } catch {
       return null;
     }
+  };
+
+  const updateSelection = (newPath: { row: number; col: number }[]) => {
+    const expression: (number | Operation)[] = [];
+    
+    for (const cell of newPath) {
+      const cellData = board[cell.row][cell.col];
+      if (cellData.value === null) {
+        setTestState(prev => ({
+          ...prev,
+          selectedCells: [],
+          currentExpression: "",
+          currentResult: null,
+        }));
+        return;
+      }
+      expression.push(cellData.value as number | Operation);
+    }
+
+    let concatenatedExpression = expression.slice();
+    for (let i = 0; i < concatenatedExpression.length - 1; i++) {
+      if (
+        typeof concatenatedExpression[i] === "number" &&
+        typeof concatenatedExpression[i + 1] === "number"
+      ) {
+        const concatenated = parseInt(
+          String(concatenatedExpression[i]) + String(concatenatedExpression[i + 1])
+        );
+        concatenatedExpression.splice(i, 2, concatenated);
+        i--;
+      }
+    }
+
+    const result = evaluateExpression(concatenatedExpression);
+    const expressionString = concatenatedExpression.join(" ");
+
+    setTestState(prev => ({
+      ...prev,
+      selectedCells: newPath,
+      currentExpression: expressionString,
+      currentResult: result,
+    }));
+  };
+
+  const handleCellSelectionStart = (row: number, col: number) => {
+    setIsSelecting(true);
+    setSelectionStart({ row, col });
+    setTestState(prev => ({
+      ...prev,
+      selectedCells: [{ row, col }],
+      currentExpression: "",
+      currentResult: null,
+    }));
+  };
+
+  const handleCellSelectionMove = (row: number, col: number) => {
+    if (!isSelecting || !selectionStart) return;
+
+    const newPath: { row: number; col: number }[] = [];
+    
+    if (selectionStart.row === row) {
+      if (selectionStart.col <= col) {
+        for (let c = selectionStart.col; c <= col; c++) {
+          newPath.push({ row, col: c });
+        }
+      } else {
+        for (let c = selectionStart.col; c >= col; c--) {
+          newPath.push({ row, col: c });
+        }
+      }
+    } else if (selectionStart.col === col) {
+      if (selectionStart.row <= row) {
+        for (let r = selectionStart.row; r <= row; r++) {
+          newPath.push({ row: r, col });
+        }
+      } else {
+        for (let r = selectionStart.row; r >= row; r--) {
+          newPath.push({ row: r, col });
+        }
+      }
+    } else {
+      newPath.push(selectionStart);
+    }
+
+    updateSelection(newPath);
+  };
+
+  const handleSelectionEnd = () => {
+    if (!isSelecting) return;
+    
+    setIsSelecting(false);
+    setSelectionStart(null);
+
+    if (testState.currentResult !== null && testState.selectedCells.length >= 1) {
+      const result = testState.currentResult;
+
+      if (targets.includes(result) && !testState.foundTargets.has(result)) {
+        const newFoundTargets = new Set(testState.foundTargets);
+        newFoundTargets.add(result);
+        
+        setTestState(prev => ({ 
+          ...prev, 
+          foundTargets: newFoundTargets,
+          attemptCount: prev.attemptCount + 1 
+        }));
+        
+        toast({
+          title: "Цель найдена!",
+          description: `Вы нашли ${result}`,
+        });
+
+        if (newFoundTargets.size === targets.length) {
+          toast({
+            title: "Поздравляем!",
+            description: "Вы решили головоломку! Теперь можете её сохранить.",
+          });
+        }
+      }
+    }
+
+    setTimeout(() => {
+      setTestState(prev => ({
+        ...prev,
+        selectedCells: [],
+        currentExpression: "",
+        currentResult: null,
+      }));
+    }, 500);
   };
 
   const handleTestCellClick = (row: number, col: number) => {
@@ -278,8 +407,94 @@ export default function Constructor() {
     }
   };
 
+  const handleAutoFill = () => {
+    const newBoard = board.map((row, rowIndex) =>
+      row.map((cell, colIndex) => {
+        if (cell.value !== null) return cell;
+        
+        if (cell.type === "number") {
+          return { ...cell, value: Math.floor(Math.random() * 10) };
+        } else {
+          const operations: Operation[] = ["+", "-", "*", "/"];
+          if (difficulty === "medium" || difficulty === "hard") {
+            operations.push("^");
+          }
+          return { ...cell, value: operations[Math.floor(Math.random() * operations.length)] };
+        }
+      })
+    );
+    
+    setBoard(newBoard);
+
+    if (targets.length === 0) {
+      const generatedTargets: number[] = [];
+      const targetCount = 3;
+      
+      for (let i = 0; i < targetCount; i++) {
+        const isHorizontal = Math.random() > 0.5;
+        const minLength = 3;
+        const maxLength = Math.min(7, boardSize);
+        const pathLength = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+        
+        let path: { row: number; col: number }[] = [];
+        
+        if (isHorizontal) {
+          const row = Math.floor(Math.random() * boardSize);
+          const maxStart = boardSize - pathLength;
+          const startCol = Math.floor(Math.random() * (maxStart + 1));
+          
+          for (let col = startCol; col < startCol + pathLength; col++) {
+            path.push({ row, col });
+          }
+        } else {
+          const col = Math.floor(Math.random() * boardSize);
+          const maxStart = boardSize - pathLength;
+          const startRow = Math.floor(Math.random() * (maxStart + 1));
+          
+          for (let row = startRow; row < startRow + pathLength; row++) {
+            path.push({ row, col });
+          }
+        }
+        
+        const expression: (number | Operation)[] = [];
+        for (const cell of path) {
+          const cellData = newBoard[cell.row][cell.col];
+          if (cellData.value !== null) {
+            expression.push(cellData.value as number | Operation);
+          }
+        }
+        
+        let concatenatedExpression = expression.slice();
+        for (let j = 0; j < concatenatedExpression.length - 1; j++) {
+          if (
+            typeof concatenatedExpression[j] === "number" &&
+            typeof concatenatedExpression[j + 1] === "number"
+          ) {
+            const concatenated = parseInt(
+              String(concatenatedExpression[j]) + String(concatenatedExpression[j + 1])
+            );
+            concatenatedExpression.splice(j, 2, concatenated);
+            j--;
+          }
+        }
+        
+        const result = evaluateExpression(concatenatedExpression);
+        if (result !== null && !generatedTargets.includes(result)) {
+          generatedTargets.push(result);
+        }
+      }
+      
+      setTargets(generatedTargets);
+    }
+
+    toast({
+      title: "Автозаполнение",
+      description: "Пустые клетки заполнены случайными значениями",
+    });
+  };
+
   const handleAddTarget = () => {
-    const num = parseInt(targetInput);
+    const num = parseFloat(targetInput);
     if (!isNaN(num) && !targets.includes(num)) {
       setTargets([...targets, num]);
       setTargetInput("");
@@ -445,6 +660,7 @@ export default function Constructor() {
                     style={{
                       gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))`,
                     }}
+                    onMouseUp={isTestMode ? handleSelectionEnd : undefined}
                   >
                     {board.map((row, rowIndex) =>
                       row.map((cell, colIndex) => (
@@ -452,6 +668,8 @@ export default function Constructor() {
                           key={`${rowIndex}-${colIndex}`}
                           className={getCellClasses(cell, rowIndex, colIndex)}
                           onClick={() => handleCellClick(rowIndex, colIndex)}
+                          onMouseDown={isTestMode ? () => handleCellSelectionStart(rowIndex, colIndex) : undefined}
+                          onMouseEnter={isTestMode ? () => handleCellSelectionMove(rowIndex, colIndex) : undefined}
                           data-testid={`cell-${rowIndex}-${colIndex}`}
                         >
                           {cell.value !== null ? cell.value : "?"}
@@ -472,7 +690,7 @@ export default function Constructor() {
                   </div>
                 )}
 
-                <div className="flex gap-2 justify-center">
+                <div className="flex gap-2 justify-center flex-wrap">
                   <Button
                     onClick={() => setIsTestMode(!isTestMode)}
                     variant={isTestMode ? "destructive" : "default"}
@@ -489,6 +707,15 @@ export default function Constructor() {
                         Режим тестирования
                       </>
                     )}
+                  </Button>
+                  <Button
+                    onClick={handleAutoFill}
+                    variant="outline"
+                    disabled={isTestMode}
+                    data-testid="button-autofill"
+                  >
+                    <Target className="w-4 h-4 mr-2" />
+                    Автозаполнение
                   </Button>
                   <Button
                     onClick={initializeBoard}
@@ -649,6 +876,32 @@ export default function Constructor() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Тип ячейки</label>
+              <Select 
+                value={editingCell ? board[editingCell.row]?.[editingCell.col]?.type : "number"}
+                onValueChange={(value: CellType) => {
+                  if (editingCell) {
+                    const newBoard = [...board];
+                    newBoard[editingCell.row][editingCell.col] = {
+                      ...newBoard[editingCell.row][editingCell.col],
+                      type: value,
+                      value: null,
+                    };
+                    setBoard(newBoard);
+                  }
+                }}
+              >
+                <SelectTrigger data-testid="select-cell-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="number">Число</SelectItem>
+                  <SelectItem value="operation">Операция</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
             {editingCell && board[editingCell.row]?.[editingCell.col]?.type === "number" ? (
               <div>
                 <label className="text-sm font-medium mb-2 block">Число (0-99)</label>

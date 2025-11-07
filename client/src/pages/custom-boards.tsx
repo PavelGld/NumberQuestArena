@@ -17,7 +17,8 @@ export default function CustomBoards() {
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
   const [filterBoardSize, setFilterBoardSize] = useState<string>("all");
   const [showTop100, setShowTop100] = useState(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchName, setSearchName] = useState<string>("");
+  const [searchAuthor, setSearchAuthor] = useState<string>("");
 
   const { data: boards = [], isLoading } = useQuery<CustomBoard[]>({
     queryKey: showTop100 
@@ -63,12 +64,9 @@ export default function CustomBoards() {
   };
 
   const filteredBoards = boards.filter((board) => {
-    if (!searchQuery.trim()) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      board.name.toLowerCase().includes(query) ||
-      board.creatorName.toLowerCase().includes(query)
-    );
+    const nameMatch = !searchName.trim() || board.name.toLowerCase().includes(searchName.toLowerCase());
+    const authorMatch = !searchAuthor.trim() || board.creatorName.toLowerCase().includes(searchAuthor.toLowerCase());
+    return nameMatch && authorMatch;
   });
 
   return (
@@ -93,19 +91,35 @@ export default function CustomBoards() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
-                  <Search className="w-4 h-4" />
-                  Поиск по названию или автору
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Введите название поля или имя автора..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  data-testid="input-search"
-                  className="w-full"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                    <Search className="w-4 h-4" />
+                    Поиск по названию
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Название поля..."
+                    value={searchName}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    data-testid="input-search-name"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Поиск по автору
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Имя автора..."
+                    value={searchAuthor}
+                    onChange={(e) => setSearchAuthor(e.target.value)}
+                    data-testid="input-search-author"
+                    className="w-full"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -169,15 +183,15 @@ export default function CustomBoards() {
             <CardContent className="py-12 text-center">
               <Puzzle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                {searchQuery ? "Ничего не найдено" : "Нет доступных полей"}
+                {(searchName || searchAuthor) ? "Ничего не найдено" : "Нет доступных полей"}
               </h3>
               <p className="text-gray-500 mb-4">
-                {searchQuery 
+                {(searchName || searchAuthor)
                   ? "Попробуйте изменить параметры поиска"
                   : "Создайте своё первое поле в конструкторе!"
                 }
               </p>
-              {!searchQuery && (
+              {!searchName && !searchAuthor && (
                 <Link href="/constructor">
                   <Button data-testid="button-create-board">
                     Создать поле

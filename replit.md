@@ -37,11 +37,12 @@ This is a multilingual mathematical puzzle game built with React and Express. Pl
 - **Path Selection**: Continuous line selection (horizontal/vertical) with visual feedback
 - **Expression Evaluation**: Real-time mathematical expression parsing and calculation
 - **Number Concatenation**: Adjacent number cells can be selected without operations, concatenating to form larger numbers (e.g., 1-2 becomes 12)
-- **Difficulty Levels**: Three levels (easy, medium, hard) with different operation sets
+- **Difficulty Levels**: Three levels (easy, medium, hard) - in standard game tied to operation sets, in custom boards set as subjective author rating
 - **Board Sizes**: Configurable grid sizes (5x5, 10x10, 15x15)
 - **Solution Detection**: Automatic solution finding for hint system
-- **Custom Board Constructor**: Players can create and share their own puzzle boards
+- **Custom Board Constructor**: Players can create and share their own puzzle boards with unrestricted operation choice
 - **Board Validation**: Creators must solve their own puzzles before publishing
+- **Subjective Difficulty**: Custom board authors independently choose difficulty label regardless of operations or board size
 
 ### User Interface
 - **Responsive Design**: Mobile-first approach with touch-optimized controls
@@ -160,6 +161,10 @@ This project is licensed under the Apache License 2.0. All source files include 
 - November 7, 2025: Fixed horizontal scroll issue on main page header
 - November 7, 2025: Fixed React toast warnings by using useEffect for notifications
 - November 7, 2025: Fixed route ordering issue - moved /api/custom-boards/top before /:id route to prevent "top" being parsed as ID parameter
+- November 7, 2025: Made difficulty a subjective author rating independent of operations and board size
+- November 7, 2025: Removed operation references from difficulty selector in constructor
+- November 7, 2025: All operations (+, -, *, /, ^) now available in cell editor regardless of chosen difficulty
+- November 7, 2025: Added difficulty badge display in custom game header with board size info
 
 ## User Preferences
 

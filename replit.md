@@ -144,7 +144,8 @@ This project is licensed under the Apache License 2.0. All source files include 
 - November 7, 2025: Fixed drag-selection bug in custom game (mouse events now work properly)
 - November 7, 2025: Added ScrollArea for target numbers list to support many targets
 - November 7, 2025: Disabled text selection during drag operations for cleaner UX
-- November 7, 2025: Fixed bug where first cell was ignored during drag selection
+- November 7, 2025: Fixed critical bug where first cell was ignored during subsequent drag selections
+- November 7, 2025: Rewrote drag selection logic to directly initialize selection on mouseDown
 - November 7, 2025: Fixed conflict between click and drag handlers by removing onClick
 
 ## User Preferences

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,8 +66,8 @@ export default function CustomGame() {
   const [showVictoryModal, setShowVictoryModal] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [playerNickname, setPlayerNickname] = useState("");
-  const [isDragging, setIsDragging] = useState(false);
-  const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
+  const isDraggingRef = useRef(false);
+  const selectionStartRef = useRef<{ row: number; col: number } | null>(null);
 
   const { data: leaderboard = [] } = useQuery<LeaderboardEntry[]>({
     queryKey: ["/api/leaderboard", customBoard?.difficulty, customBoard?.boardSize],
@@ -168,19 +168,107 @@ export default function CustomGame() {
   };
 
   const handleCellSelectionStart = (row: number, col: number) => {
-    setIsDragging(true);
-    setSelectionStart({ row, col });
-    handleCellClick(row, col, false);
+    const clickedCell = board[row][col];
+    if (clickedCell.type !== "number" || !gameState.isPlaying) return;
+    
+    isDraggingRef.current = true;
+    selectionStartRef.current = { row, col };
+    
+    // Начать новый выбор с этой клетки
+    setGameState(prev => ({
+      ...prev,
+      selectedCells: [{ row, col }],
+      currentExpression: String(clickedCell.value),
+      currentResult: clickedCell.value as number,
+    }));
   };
 
   const handleCellSelectionMove = (row: number, col: number) => {
-    if (!isDragging) return;
-    handleCellClick(row, col, true);
+    if (!isDraggingRef.current || !gameState.isPlaying) return;
+    
+    setGameState(prev => {
+      const { selectedCells } = prev;
+      
+      const clickedCell = board[row][col];
+      const isAlreadySelected = selectedCells.some(c => c.row === row && c.col === col);
+
+      if (isAlreadySelected || selectedCells.length === 0) {
+        return prev;
+      }
+
+      const lastCell = selectedCells[selectedCells.length - 1];
+      const isAdjacent =
+        (Math.abs(lastCell.row - row) === 1 && lastCell.col === col) ||
+        (Math.abs(lastCell.col - col) === 1 && lastCell.row === row);
+
+      if (!isAdjacent) {
+        return prev;
+      }
+
+      const allInLine = selectedCells.every(cell =>
+        (cell.row === lastCell.row && cell.row === row) ||
+        (cell.col === lastCell.col && cell.col === col)
+      );
+
+      if (!allInLine) {
+        return prev;
+      }
+
+      const newSelectedCells = [...selectedCells, { row, col }];
+      const expression: (number | Operation)[] = [];
+
+      for (const cell of newSelectedCells) {
+        const cellData = board[cell.row][cell.col];
+        expression.push(cellData.value as number | Operation);
+      }
+
+      let concatenatedExpression = expression.slice();
+      for (let i = 0; i < concatenatedExpression.length - 1; i++) {
+        if (
+          typeof concatenatedExpression[i] === "number" &&
+          typeof concatenatedExpression[i + 1] === "number"
+        ) {
+          const concatenated = parseInt(
+            String(concatenatedExpression[i]) + String(concatenatedExpression[i + 1])
+          );
+          concatenatedExpression.splice(i, 2, concatenated);
+          i--;
+        }
+      }
+
+      const result = evaluateExpression(concatenatedExpression);
+      const expressionString = concatenatedExpression.join(" ");
+
+      return {
+        ...prev,
+        selectedCells: newSelectedCells,
+        currentExpression: expressionString,
+        currentResult: result,
+        attemptCount: prev.attemptCount + 1,
+      };
+    });
+    
+    // Проверка найденных целей вне setGameState чтобы избежать вложенных обновлений
+    setGameState(prev => {
+      const result = prev.currentResult;
+      if (result !== null && targets.includes(result) && !prev.foundTargets.has(result)) {
+        toast({
+          title: "Цель найдена!",
+          description: `Вы нашли ${result}`,
+        });
+        
+        return {
+          ...prev,
+          foundTargets: new Set([...Array.from(prev.foundTargets), result]),
+        };
+      }
+      return prev;
+    });
   };
 
   const handleSelectionEnd = () => {
-    setIsDragging(false);
-    setSelectionStart(null);
+    isDraggingRef.current = false;
+    selectionStartRef.current = null;
   };
 
   const handleCellClick = (row: number, col: number, isDragMode = false) => {
@@ -191,9 +279,6 @@ export default function CustomGame() {
     const isAlreadySelected = selectedCells.some(c => c.row === row && c.col === col);
 
     if (isAlreadySelected) {
-      if (isDragMode) {
-        return;
-      }
       setGameState(prev => ({
         ...prev,
         selectedCells: [],

@@ -2,15 +2,18 @@ import {
   users, 
   leaderboardEntries, 
   customBoards,
+  customBoardLeaderboards,
   type User, 
   type InsertUser, 
   type LeaderboardEntry, 
   type InsertLeaderboardEntry,
   type CustomBoard,
-  type InsertCustomBoard
+  type InsertCustomBoard,
+  type CustomBoardLeaderboard,
+  type InsertCustomBoardLeaderboard
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 /**
  * Интерфейс для работы с хранилищем данных
@@ -31,6 +34,10 @@ export interface IStorage {
   getCustomBoards(difficulty?: string, boardSize?: number): Promise<CustomBoard[]>;
   getCustomBoard(id: number): Promise<CustomBoard | undefined>;
   updateCustomBoardSolved(id: number): Promise<CustomBoard>;
+  getTop100PopularBoards(): Promise<CustomBoard[]>;
+  createCustomBoardLeaderboardEntry(entry: InsertCustomBoardLeaderboard): Promise<CustomBoardLeaderboard>;
+  getCustomBoardLeaderboard(customBoardId: number): Promise<CustomBoardLeaderboard[]>;
+  incrementCustomBoardCompletionCount(customBoardId: number): Promise<void>;
 }
 
 /**
@@ -126,6 +133,43 @@ export class DatabaseStorage implements IStorage {
       .where(eq(customBoards.id, id))
       .returning();
     return board;
+  }
+
+  async getTop100PopularBoards(): Promise<CustomBoard[]> {
+    const boards = await db
+      .select()
+      .from(customBoards)
+      .where(and(eq(customBoards.isSolved, true)))
+      .orderBy(desc(customBoards.completionCount))
+      .limit(100);
+    
+    return boards;
+  }
+
+  async createCustomBoardLeaderboardEntry(insertEntry: InsertCustomBoardLeaderboard): Promise<CustomBoardLeaderboard> {
+    const [entry] = await db
+      .insert(customBoardLeaderboards)
+      .values(insertEntry)
+      .returning();
+    return entry;
+  }
+
+  async getCustomBoardLeaderboard(customBoardId: number): Promise<CustomBoardLeaderboard[]> {
+    const entries = await db
+      .select()
+      .from(customBoardLeaderboards)
+      .where(eq(customBoardLeaderboards.customBoardId, customBoardId))
+      .orderBy(customBoardLeaderboards.time)
+      .limit(10);
+    
+    return entries;
+  }
+
+  async incrementCustomBoardCompletionCount(customBoardId: number): Promise<void> {
+    await db
+      .update(customBoards)
+      .set({ completionCount: sql`${customBoards.completionCount} + 1` })
+      .where(eq(customBoards.id, customBoardId));
   }
 }
 

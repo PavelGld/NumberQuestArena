@@ -27,7 +27,17 @@ export const customBoards = pgTable("custom_boards", {
   boardData: jsonb("board_data").notNull(), // 2D array of cells
   targets: integer("targets").array().notNull(), // target numbers
   isSolved: boolean("is_solved").notNull().default(false), // has creator solved it?
+  completionCount: integer("completion_count").notNull().default(0), // how many times solved
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const customBoardLeaderboards = pgTable("custom_board_leaderboards", {
+  id: serial("id").primaryKey(),
+  customBoardId: integer("custom_board_id").notNull().references(() => customBoards.id),
+  nickname: text("nickname").notNull(),
+  time: integer("time").notNull(), // time in seconds
+  attempts: integer("attempts").notNull(), // number of attempts made
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -46,6 +56,14 @@ export const insertLeaderboardEntrySchema = createInsertSchema(leaderboardEntrie
 export const insertCustomBoardSchema = createInsertSchema(customBoards).omit({
   id: true,
   createdAt: true,
+  completionCount: true,
+});
+
+export const insertCustomBoardLeaderboardSchema = createInsertSchema(customBoardLeaderboards).pick({
+  customBoardId: true,
+  nickname: true,
+  time: true,
+  attempts: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -54,3 +72,5 @@ export type InsertLeaderboardEntry = z.infer<typeof insertLeaderboardEntrySchema
 export type LeaderboardEntry = typeof leaderboardEntries.$inferSelect;
 export type InsertCustomBoard = z.infer<typeof insertCustomBoardSchema>;
 export type CustomBoard = typeof customBoards.$inferSelect;
+export type InsertCustomBoardLeaderboard = z.infer<typeof insertCustomBoardLeaderboardSchema>;
+export type CustomBoardLeaderboard = typeof customBoardLeaderboards.$inferSelect;

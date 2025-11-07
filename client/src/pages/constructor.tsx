@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
@@ -670,7 +671,7 @@ export default function Constructor() {
 
   const getCellClasses = (cell: Cell, row: number, col: number) => {
     const isSelected = testState.selectedCells.some(c => c.row === row && c.col === col);
-    const baseClasses = "w-12 h-12 md:w-16 md:h-16 flex items-center justify-center font-bold text-lg rounded-lg transition-all cursor-pointer border-2";
+    const baseClasses = "w-12 h-12 md:w-16 md:h-16 flex items-center justify-center font-bold text-lg rounded-lg transition-all cursor-pointer border-2 select-none";
     
     if (isTestMode) {
       if (isSelected) {
@@ -741,7 +742,7 @@ export default function Constructor() {
                         <div
                           key={`${rowIndex}-${colIndex}`}
                           className={getCellClasses(cell, rowIndex, colIndex)}
-                          onClick={() => handleCellClick(rowIndex, colIndex)}
+                          onClick={() => isTestMode ? handleTestCellClick(rowIndex, colIndex) : handleCellClick(rowIndex, colIndex)}
                           onMouseDown={isTestMode ? () => handleCellSelectionStart(rowIndex, colIndex) : undefined}
                           onMouseEnter={isTestMode ? () => handleCellSelectionMove(rowIndex, colIndex) : undefined}
                           data-testid={`cell-${rowIndex}-${colIndex}`}
@@ -899,33 +900,35 @@ export default function Constructor() {
                   </Button>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {targets.map((target) => (
-                    <div
-                      key={target}
-                      className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-                        testState.foundTargets.has(target)
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                      data-testid={`target-${target}`}
-                    >
-                      {testState.foundTargets.has(target) && (
-                        <CheckCircle className="w-4 h-4" />
-                      )}
-                      <span className="font-medium">{target}</span>
-                      {!isTestMode && (
-                        <button
-                          onClick={() => handleRemoveTarget(target)}
-                          className="text-red-500 hover:text-red-700"
-                          data-testid={`button-remove-target-${target}`}
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <ScrollArea className="h-48">
+                  <div className="flex flex-wrap gap-2 pr-4">
+                    {targets.map((target) => (
+                      <div
+                        key={target}
+                        className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                          testState.foundTargets.has(target)
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                        data-testid={`target-${target}`}
+                      >
+                        {testState.foundTargets.has(target) && (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                        <span className="font-medium">{target}</span>
+                        {!isTestMode && (
+                          <button
+                            onClick={() => handleRemoveTarget(target)}
+                            className="text-red-500 hover:text-red-700"
+                            data-testid={`button-remove-target-${target}`}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
 
                 <Button
                   onClick={handleSave}

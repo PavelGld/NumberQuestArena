@@ -47,10 +47,13 @@ This is a multilingual mathematical puzzle game built with React and Express. Pl
 - **Responsive Design**: Mobile-first approach with touch-optimized controls
 - **Component Library**: shadcn/ui components for consistent design system
 - **Game Board**: Interactive grid with hover states and selection feedback
+- **Drag Selection**: Mouse drag support for continuous path selection on desktop
+- **Text Selection Prevention**: User-select disabled on cells to prevent unwanted text highlighting
+- **Scrollable Target Lists**: ScrollArea component for viewing many target numbers
 - **Statistics Panel**: Real-time game statistics and progress tracking
 - **Leaderboard**: Filterable rankings by difficulty and board size
 - **Settings Dialog**: Game configuration and language switching
-- **Board Constructor**: Visual editor for creating custom puzzle boards
+- **Board Constructor**: Visual editor for creating custom puzzle boards with validation
 - **Custom Board Browser**: Gallery of player-created boards with filtering
 - **Multi-Mode Navigation**: Seamless switching between standard game, constructor, and custom boards
 
@@ -136,6 +139,11 @@ This project is licensed under the Apache License 2.0. All source files include 
 - November 7, 2025: Implemented player-created board gallery with filtering
 - November 7, 2025: Added validation requiring creators to solve puzzles before publishing
 - November 7, 2025: Enhanced number concatenation logic for adjacent cells
+- November 7, 2025: Fixed critical validation bug preventing unsolvable boards from being saved
+- November 7, 2025: Added isBoardDirty flag to track modifications after puzzle solving
+- November 7, 2025: Fixed drag-selection bug in custom game (mouse events now work properly)
+- November 7, 2025: Added ScrollArea for target numbers list to support many targets
+- November 7, 2025: Disabled text selection during drag operations for cleaner UX
 
 ## User Preferences
 

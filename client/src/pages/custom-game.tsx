@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
@@ -65,6 +66,7 @@ export default function CustomGame() {
   const [showVictoryModal, setShowVictoryModal] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [playerNickname, setPlayerNickname] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
 
   const { data: leaderboard = [] } = useQuery<LeaderboardEntry[]>({
     queryKey: ["/api/leaderboard", customBoard?.difficulty, customBoard?.boardSize],
@@ -162,6 +164,20 @@ export default function CustomGame() {
     } catch {
       return null;
     }
+  };
+
+  const handleCellSelectionStart = (row: number, col: number) => {
+    setIsDragging(true);
+    handleCellClick(row, col);
+  };
+
+  const handleCellSelectionMove = (row: number, col: number) => {
+    if (!isDragging) return;
+    handleCellClick(row, col);
+  };
+
+  const handleSelectionEnd = () => {
+    setIsDragging(false);
   };
 
   const handleCellClick = (row: number, col: number) => {
@@ -302,7 +318,7 @@ export default function CustomGame() {
 
   const getCellClasses = (cell: Cell, row: number, col: number) => {
     const isSelected = gameState.selectedCells.some(c => c.row === row && c.col === col);
-    const baseClasses = "w-12 h-12 md:w-16 md:h-16 flex items-center justify-center font-bold text-lg rounded-lg transition-all cursor-pointer border-2";
+    const baseClasses = "w-12 h-12 md:w-16 md:h-16 flex items-center justify-center font-bold text-lg rounded-lg transition-all cursor-pointer border-2 select-none";
 
     if (isSelected) {
       return `${baseClasses} bg-indigo-500 text-white border-indigo-600 scale-110 shadow-lg`;
@@ -375,6 +391,7 @@ export default function CustomGame() {
                     style={{
                       gridTemplateColumns: `repeat(${customBoard.boardSize}, minmax(0, 1fr))`,
                     }}
+                    onMouseUp={handleSelectionEnd}
                   >
                     {board.map((row, rowIndex) =>
                       row.map((cell, colIndex) => (
@@ -382,6 +399,8 @@ export default function CustomGame() {
                           key={`${rowIndex}-${colIndex}`}
                           className={getCellClasses(cell, rowIndex, colIndex)}
                           onClick={() => handleCellClick(rowIndex, colIndex)}
+                          onMouseDown={() => handleCellSelectionStart(rowIndex, colIndex)}
+                          onMouseEnter={() => handleCellSelectionMove(rowIndex, colIndex)}
                           data-testid={`cell-${rowIndex}-${colIndex}`}
                         >
                           {cell.value}
@@ -440,26 +459,28 @@ export default function CustomGame() {
                   <Target className="w-5 h-5" />
                   Целевые числа
                 </h3>
-                <div className="space-y-2">
-                  {targets.map((target) => (
-                    <div
-                      key={target}
-                      className={`flex items-center justify-between p-3 rounded-lg ${
-                        gameState.foundTargets.has(target)
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                      data-testid={`target-${target}`}
-                    >
-                      <span className="font-bold text-lg">{target}</span>
-                      {gameState.foundTargets.has(target) ? (
-                        <CheckCircle className="w-5 h-5" />
-                      ) : (
-                        <Circle className="w-5 h-5" />
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <ScrollArea className="h-64">
+                  <div className="space-y-2 pr-4">
+                    {targets.map((target) => (
+                      <div
+                        key={target}
+                        className={`flex items-center justify-between p-3 rounded-lg ${
+                          gameState.foundTargets.has(target)
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                        data-testid={`target-${target}`}
+                      >
+                        <span className="font-bold text-lg">{target}</span>
+                        {gameState.foundTargets.has(target) ? (
+                          <CheckCircle className="w-5 h-5" />
+                        ) : (
+                          <Circle className="w-5 h-5" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
                 <div className="mt-4">
                   <Progress
                     value={(gameState.foundTargets.size / targets.length) * 100}

@@ -133,6 +133,51 @@ custom_board_leaderboards (
 - **Backend**: Stateless Express server suitable for horizontal scaling
 - **Sessions**: PostgreSQL-backed sessions for multi-instance support
 
+## Mobile Application
+
+A React Native (Expo) mobile app is available in the `/mobile` directory. It provides the same functionality as the web version:
+
+- Full game experience with touch gestures (swipe to select cells)
+- Custom board constructor
+- Custom boards gallery
+- Leaderboards
+- Russian/English language support
+- Dark theme optimized for mobile screens
+
+### Mobile Project Structure
+```
+mobile/
+├── App.tsx                    # Entry point
+├── src/
+│   ├── components/            # UI components (GameBoard, TargetList, etc.)
+│   ├── screens/               # App screens (Home, Game, Leaderboard, etc.)
+│   ├── navigation/            # React Navigation setup
+│   ├── context/               # Language context
+│   ├── hooks/                 # Custom hooks
+│   └── lib/                   # API client, game logic, i18n
+└── assets/                    # Icons and splash screens
+```
+
+### Running the Mobile App
+
+```bash
+cd mobile
+npm install
+npm start
+```
+
+Then scan the QR code with Expo Go on your mobile device.
+
+### Building for Production
+
+```bash
+# Android
+npx eas build --platform android
+
+# iOS
+npx eas build --platform ios
+```
+
 ## Licensing
 
 This project is licensed under the Apache License 2.0. All source files include appropriate copyright headers, and the full license text is available in the LICENSE file.
@@ -165,6 +210,10 @@ This project is licensed under the Apache License 2.0. All source files include 
 - November 7, 2025: Removed operation references from difficulty selector in constructor
 - November 7, 2025: All operations (+, -, *, /, ^) now available in cell editor regardless of chosen difficulty
 - November 7, 2025: Added difficulty badge display in custom game header with board size info
+- November 27, 2025: Created React Native (Expo) mobile application in /mobile directory
+- November 27, 2025: Mobile app includes all web features: game, constructor, custom boards gallery, leaderboards
+- November 27, 2025: Added touch gesture support for cell selection (swipe to select)
+- November 27, 2025: Mobile app uses same API endpoints, sharing database with web version
 
 ## User Preferences
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   Dimensions,
   PanResponder,
   GestureResponderEvent,
-  PanResponderGestureState,
 } from 'react-native';
 import { Cell, Operation, BoardSize } from '../lib/api';
 import { isValidPath, evaluateExpression } from '../lib/gameLogic';
@@ -33,10 +32,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   foundTargets,
   solutionCells = [],
 }) => {
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [selectionStart, setSelectionStart] = useState<{ row: number; col: number } | null>(null);
-  const boardRef = useRef<View>(null);
   const boardLayout = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  const selectionStartRef = useRef<{ row: number; col: number } | null>(null);
 
   const maxBoardWidth = SCREEN_WIDTH - BOARD_PADDING * 2;
   const cellSize = Math.floor(maxBoardWidth / boardSize);
@@ -60,16 +57,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const updateSelection = useCallback((cells: { row: number; col: number }[]) => {
     if (!isValidPath(cells) && cells.length > 1) return;
 
-    if (cells.length > 0) {
-      const startCell = board[cells[0].row][cells[0].col];
-      if (startCell.type !== "number") return;
+    if (cells.length > 0 && board.length > 0) {
+      const startCell = board[cells[0].row]?.[cells[0].col];
+      if (!startCell || startCell.type !== "number") return;
     }
 
     const expression: (number | Operation)[] = [];
     let validExpression = true;
 
     for (let i = 0; i < cells.length; i++) {
-      const cell = board[cells[i].row][cells[i].col];
+      const cell = board[cells[i].row]?.[cells[i].col];
+      if (!cell) {
+        validExpression = false;
+        break;
+      }
       const expectedType = i % 2 === 0 ? "number" : "operation";
       
       if (cell.type !== expectedType) {
@@ -137,39 +138,36 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     updateSelection(newPath);
   }, [updateSelection]);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt: GestureResponderEvent) => {
-        const { pageX, pageY } = evt.nativeEvent;
-        const cell = getCellFromPosition(pageX, pageY);
-        if (cell) {
-          setIsSelecting(true);
-          setSelectionStart(cell);
-          updateSelection([cell]);
-        }
-      },
-      onPanResponderMove: (evt: GestureResponderEvent) => {
-        if (!isSelecting || !selectionStart) return;
-        const { pageX, pageY } = evt.nativeEvent;
-        const cell = getCellFromPosition(pageX, pageY);
-        if (cell) {
-          handleSelectionMove(selectionStart, cell);
-        }
-      },
-      onPanResponderRelease: () => {
-        setIsSelecting(false);
-        setSelectionStart(null);
-        onSelectionEnd();
-      },
-      onPanResponderTerminate: () => {
-        setIsSelecting(false);
-        setSelectionStart(null);
-        onSelectionEnd();
-      },
-    })
-  ).current;
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (evt: GestureResponderEvent) => {
+      const { pageX, pageY } = evt.nativeEvent;
+      const cell = getCellFromPosition(pageX, pageY);
+      if (cell) {
+        selectionStartRef.current = cell;
+        updateSelection([cell]);
+      }
+    },
+    onPanResponderMove: (evt: GestureResponderEvent) => {
+      const startCell = selectionStartRef.current;
+      if (!startCell) return;
+      
+      const { pageX, pageY } = evt.nativeEvent;
+      const currentCell = getCellFromPosition(pageX, pageY);
+      if (currentCell) {
+        handleSelectionMove(startCell, currentCell);
+      }
+    },
+    onPanResponderRelease: () => {
+      selectionStartRef.current = null;
+      onSelectionEnd();
+    },
+    onPanResponderTerminate: () => {
+      selectionStartRef.current = null;
+      onSelectionEnd();
+    },
+  }), [getCellFromPosition, updateSelection, handleSelectionMove, onSelectionEnd]);
 
   const isCellSelected = (row: number, col: number): boolean => {
     return selectedCells.some(cell => cell.row === row && cell.col === col);
@@ -207,7 +205,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <View
-      ref={boardRef}
       style={[styles.container, { width: boardWidth, height: boardWidth }]}
       onLayout={(event) => {
         event.target.measure((x, y, width, height, pageX, pageY) => {
